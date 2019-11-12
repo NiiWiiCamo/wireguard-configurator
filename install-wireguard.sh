@@ -41,7 +41,9 @@ sed -i '/net.ipv4.ip_forward = 1/s/^#//g' /etc/sysctl.conf
 
 
 # download generator script
-curl https://raw.githubusercontent.com/NiiWiiCamo/wireguard-configurator/master/generate-client.sh --output /etc/wireguard/generate-client.sh
+generatorurl=https://raw.githubusercontent.com/NiiWiiCamo/wireguard-configurator/master/generate-client.sh
+output=/etc/wireguard/generate-client.sh
+wget -O $output $generatorurl 2>/dev/null || curl $generatorurl --output $output 2>/dev/null || "Please install either wget or curl, or manually download the client generator."
 
 
 # change working directory
