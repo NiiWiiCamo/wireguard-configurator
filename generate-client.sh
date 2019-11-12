@@ -48,8 +48,16 @@ ask_question_with_default(){
   done
 }
 
-fail(){
-return 0
+check_port(){
+  [ $1 -ge 1 -a $1 -le 65535 ]
+}
+
+check_ip(){
+  if [[ $1 =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+    return 0
+  else
+    return 1
+  fi
 }
 
 
@@ -87,10 +95,10 @@ do
 done
 
 
-ask_question_with_default	interface	"Enter interface to be configured" 	${interface}
-ask_question_with_default	dns		"Enter DNS address" 			"${dns}" fail
-ask_question_with_default	hostname	"Enter public server address" 		${hostname}
-ask_question_with_default	serverport	"Enter external server port" 		${serverport}
+ask_question_with_default	interface	"Enter interface to be configured" 	"${interface}"	
+ask_question_with_default	dns		"Enter DNS address" 			"${dns}" 	fail
+ask_question_with_default	hostname	"Enter public server address" 		"${hostname}"	
+ask_question_with_default	serverport	"Enter external server port" 		"${serverport}"	check_port
 
 cat << ENDCLIENT > client-configs/$client.conf
 [Interface]
