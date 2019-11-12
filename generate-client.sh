@@ -100,7 +100,7 @@ ask_question_with_default	dns		"Enter DNS address" 			"${dns}" 	fail
 ask_question_with_default	hostname	"Enter public server address" 		"${hostname}"	
 ask_question_with_default	serverport	"Enter external server port" 		"${serverport}"	check_port
 
-cat << ENDCLIENT > client-configs/$client.conf
+cat << ENDCLIENT > client-configs/$client@$hostname.conf
 [Interface]
 Privatekey = $(cat certs/$client-private.key)
 Address = $address
@@ -120,9 +120,9 @@ PublicKey = $(cat certs/$client-public.key)
 AllowedIPs = $address/32
 ENDSERVER
 
-echo "Copying config to $copydest$client.conf and giving user $user ownership"
-cp /etc/wireguard/client-configs/$client.conf $copydest$client.conf
-chown $user $copydest$client.conf
+echo "Copying config to $copydest$client@hostname.conf and giving user $user ownership"
+cp /etc/wireguard/client-configs/$client@$hostname.conf $copydest$client@$hostname.conf
+chown $user $copydest$client@$hostname.conf
 
 
 echo "Do you wish to restart Wireguard interface $interface now?"
