@@ -4,23 +4,73 @@
 
 # Parameters (Change here pls)
 
-
-interface=wg0			# wireguard interface to configure, default: wg0
-workingdir=/etc/wireguard/	# working directory default: /etc/wireguard
-network="10.255.255."		# first three network octets (currently only /24 supported), default: 10.255.255.
+interface=${WG_INTERFACE:-wg0}	# wireguard interface to configure, default: wg0
+workingdir=${WG_PWD:-auto}	# working directory default: auto=scriptdir
+network=${WG_NETWORK:-10.255.255.}		# first three network octets (currently only /24 supported), default: 10.255.255.
 dns=				# dns server that the clients will use, default is empty (will be asked on execution)
 hostname=			# hostname the clients will connect to, usually external, default is empty (will be asked on execution)
 serverport=51820		# server port for external clients
 copydest=/home/pi/		# destination for config files to be copied to (for scp access)
 user=pi				# user to own the copied config afterwards
 
+ask_question_with_default(){
+  # 1. arg out val
+  # 2. arg is Text
+  # 3. arg is default value
+  # 4. arg (optional) validator function
+  # return is the result
+  set -x
+  local valid_input=0
+  read $1 <<< "$3"
+  if [ $# -eq 4 ]; then
+    local validator=$4
+    local has_validator=1
+  else
+    local has_validator=0
+  fi
+  while true; do 
+    echo -n "$2 [$3]: "
+    read tmp
+    if [ -z $tmp ]; then
+      read $1 <<< "$3"
+    else
+      read $1 <<< "$tmp"
+    fi
+    if [ $has_validator -eq 1 ]; then
+      $validator $tmp
+      local RC=$?
+      if [ $RC -eq 0 ]; then
+        return 0
+      fi
+    else
+      return 0
+    fi
+  done
+}
+
+check_port(){
+  [ $1 -ge 1 -a $1 -le 65535 ]
+}
+
+check_ip(){
+  if [[ $1 =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+
 
 # Script, pls don't change much here:
+if [ ! X${workingdir} = Xauto ]; then
+  cd $(dirname $(readlink -f $0))
+fi
 
 if ! [ $(id -u) -eq 0 ]
 then
   echo "You are not running this script as root! Please use sudo (or equivalent)!"
-  exit 1
+  #exit 1
 fi
 
 cd $workingdir
@@ -44,31 +94,11 @@ do
   fi
 done
 
-if test -z "$interface"
-then
-  echo -n "Enter interface to be configured: "
-  read interface
-fi
 
-if test -z "$dns"
-then
-  echo -n "Enter DNS address: "
-  read dns
-fi
-
-if test -z "$hostname"
-then
-  echo -n "Enter public server address: "
-  read hostname
-fi
-
-if test -z "$serverport"
-then
-  echo -n "Enter external server port: "
-  read serverport
-fi
-
-
+ask_question_with_default	interface	"Enter interface to be configured" 	"${interface}"	
+ask_question_with_default	dns		"Enter DNS address" 			"${dns}" 	fail
+ask_question_with_default	hostname	"Enter public server address" 		"${hostname}"	
+ask_question_with_default	serverport	"Enter external server port" 		"${serverport}"	check_port
 
 cat << ENDCLIENT > client-configs/$client.conf
 [Interface]
