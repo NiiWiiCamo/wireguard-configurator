@@ -3,7 +3,6 @@
 # WireGuard Certificate and Config generator
 
 # Parameters (Change here pls)
-
 interface=${WG_INTERFACE:-wg0}	# wireguard interface to configure, default: wg0
 workingdir=${WG_PWD:-auto}	# working directory default: auto=scriptdir
 network=${WG_NETWORK:-10.255.255.}		# first three network octets (currently only /24 supported), default: 10.255.255.
@@ -19,7 +18,6 @@ ask_question_with_default(){
   # 3. arg is default value
   # 4. arg (optional) validator function
   # return is the result
-  set -x
   local valid_input=0
   read $1 <<< "$3"
   if [ $# -eq 4 ]; then
@@ -33,11 +31,12 @@ ask_question_with_default(){
     read tmp
     if [ -z $tmp ]; then
       read $1 <<< "$3"
+      read tmp <<< "$3"
     else
       read $1 <<< "$tmp"
     fi
     if [ $has_validator -eq 1 ]; then
-      $validator $tmp
+      $validator "$tmp"
       local RC=$?
       if [ $RC -eq 0 ]; then
         return 0
@@ -49,7 +48,10 @@ ask_question_with_default(){
 }
 
 check_port(){
-  [ $1 -ge 1 -a $1 -le 65535 ]
+  if [ -z $1 ]; then 
+    return 1
+  fi 
+  [ "$1" -ge 1 -a "$1" -le 65535 ]
 }
 
 check_ip(){
@@ -63,8 +65,9 @@ check_ip(){
 
 
 # Script, pls don't change much here:
-if [ ! X${workingdir} = Xauto ]; then
+if [ X${workingdir} = Xauto ]; then
   cd $(dirname $(readlink -f $0))
+  workingdir=$PWD
 fi
 
 if ! [ $(id -u) -eq 0 ]
@@ -96,7 +99,7 @@ done
 
 
 ask_question_with_default	interface	"Enter interface to be configured" 	"${interface}"	
-ask_question_with_default	dns		"Enter DNS address" 			"${dns}" 	fail
+ask_question_with_default	dns		"Enter DNS address" 			"${dns}" 	
 ask_question_with_default	hostname	"Enter public server address" 		"${hostname}"	
 ask_question_with_default	serverport	"Enter external server port" 		"${serverport}"	check_port
 
