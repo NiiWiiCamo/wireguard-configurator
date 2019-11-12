@@ -13,7 +13,7 @@ fi
 
 # Getting your system up to date
 apt-get update
-apt-get upgrade
+apt-get -y upgrade
 
 
 # check if you are running on a raspberry pi
@@ -21,7 +21,7 @@ echo "Checking if you are running on a Raspberry PI..."
 if grep -q Raspberry /proc/device-tree/model
 then
   echo "You are running on a Raspberry PI. Downloading an additional packet"
-  apt-get install raspberry-kernel-headers
+  apt-get -y install raspberry-kernel-headers
 else
   echo "You are running a $(uname -o) on $(uname -r) architecture."
 fi
@@ -34,7 +34,7 @@ printf 'Package: *\nPin: release a=unstable\nPin-Priority: 150\n' | tee --append
 
 # update packet list again and install wireguard
 apt-get update
-apt-get install wireguard
+apt-get -y install wireguard
 
 # activate ipv4 forwarding in /etc/sysctl.conf
 sed -i '/net.ipv4.ip_forward = 1/s/^#//g' /etc/sysctl.conf
