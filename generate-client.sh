@@ -80,7 +80,7 @@ cd $workingdir
 
 echo -n "Enter client name: "
 read client
-wg genkey | tee certs/$client-private.key | wg pubkey > certs/$client-public.key
+wg genkey | tee certs/${client}-private.key | wg pubkey > certs/${client}-public.key
 
 # Check for a free IP address for the client
 
@@ -88,11 +88,11 @@ echo "Checking for first free IP in network ${network}0/24."
 
 for host in {1..200}
 do
-  address=$network$host
+  address=${network}${host}
 #  echo $address
-  if ! grep -q $address $interface.conf
+  if ! grep -q ${address} ${interface}.conf
   then
-    echo "Found IP: "$address
+    echo "Found IP: "${address}
     break
   fi
 done
@@ -103,35 +103,35 @@ ask_question_with_default	dns		"Enter DNS address" 			"${dns}"
 ask_question_with_default	hostname	"Enter public server address" 		"${hostname}"	
 ask_question_with_default	serverport	"Enter external server port" 		"${serverport}"	check_port
 
-cat << ENDCLIENT > client-configs/$client@$hostname.conf
+cat << ENDCLIENT > client-configs/${client}@${hostname}.conf
 [Interface]
-Privatekey = $(cat certs/$client-private.key)
-Address = $address
-DNS = $dns
+Privatekey = $(cat certs/${client}-private.key)
+Address = ${address}
+DNS = ${dns}
 
 [Peer]
 PublicKey = $(cat certs/server-public.key)
-Endpoint = $hostname:$serverport
+Endpoint = ${hostname}:${serverport}
 AllowedIPs = 0.0.0.0/0
 PersistentKeepalive = 25
 ENDCLIENT
 
-cat << ENDSERVER >> $interface.conf
-# Client config $client
+cat << ENDSERVER >> ${interface}.conf
+# Client config ${client}
 [Peer]
-PublicKey = $(cat certs/$client-public.key)
-AllowedIPs = $address/32
+PublicKey = $(cat certs/${client}-public.key)
+AllowedIPs = ${address}/32
 ENDSERVER
 
-echo "Copying config to $copydest$client@$hostname.conf and giving user $user ownership"
-cp /etc/wireguard/client-configs/$client@$hostname.conf $copydest$client@$hostname.conf
-chown $user $copydest$client@$hostname.conf
+echo "Copying config to ${copydest}${client}@${hostname}.conf and giving user ${user} ownership"
+cp /etc/wireguard/client-configs/${client}@${hostname}.conf ${copydest}${client}@${hostname}.conf
+chown $user ${copydest}${client}@${hostname}.conf
 
 
-echo "Do you wish to restart Wireguard interface $interface now?"
+echo "Do you wish to restart Wireguard interface ${interface} now?"
 select yn in "Yes" "No"; do
     case $yn in
-        Yes ) wg-quick down $interface;wg-quick up $interface;echo "$interface was restarted!";break;;
-        No ) echo "Please restart $interface manually to reload the config";break;;
+        Yes ) wg-quick down ${interface};wg-quick up ${interface};echo "${interface} was restarted!";break;;
+        No ) echo "Please restart ${interface} manually to reload the config";break;;
     esac
 done
