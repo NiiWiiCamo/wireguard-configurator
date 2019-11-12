@@ -123,7 +123,7 @@ PublicKey = $(cat certs/$client-public.key)
 AllowedIPs = $address/32
 ENDSERVER
 
-echo "Copying config to $copydest$client@hostname.conf and giving user $user ownership"
+echo "Copying config to $copydest$client@$hostname.conf and giving user $user ownership"
 cp /etc/wireguard/client-configs/$client@$hostname.conf $copydest$client@$hostname.conf
 chown $user $copydest$client@$hostname.conf
 
