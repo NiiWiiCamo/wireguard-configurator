@@ -1,6 +1,12 @@
 #!/bin/bash
 
-# Install script v2 for Wireguard
+##############################
+#                            #
+#   Wireguard Configurator   #
+#                            #
+##############################
+
+# installer
 
 # set expected config version
 installerver=1
