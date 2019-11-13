@@ -2,15 +2,6 @@
 
 # WireGuard Certificate and Config generator
 
-# Parameters (Change here pls)
-interface=${WG_INTERFACE:-wg0}	# wireguard interface to configure, default: wg0
-workingdir=${WG_PWD:-auto}	# working directory default: auto=scriptdir
-network=${WG_NETWORK:-10.255.255.}		# first three network octets (currently only /24 supported), default: 10.255.255.
-dns=				# dns server that the clients will use, default is empty (will be asked on execution)
-hostname=			# hostname the clients will connect to, usually external, default is empty (will be asked on execution)
-serverport=51820		# server port for external clients
-copydest=/home/pi/		# destination for config files to be copied to (for scp access)
-user=pi				# user to own the copied config afterwards
 
 ask_question_with_default(){
   # 1. arg out val
@@ -62,6 +53,11 @@ check_ip(){
   fi
 }
 
+interface=${WG_INTERFACE:-wg0}          # wireguard interface to configure, default: wg0
+ask_question_with_default	interface	"Enter interface to be configured" 	"${interface}"	
+
+workingdir=${WG_PWD:-auto}              # working directory default: auto=scriptdir
+network=${WG_NETWORK:-10.255.255.}      # first three network octets (currently only /24 supported), default: 10.255.255.
 
 
 # Script, pls don't change much here:
@@ -98,10 +94,23 @@ do
 done
 
 
-ask_question_with_default	interface	"Enter interface to be configured" 	"${interface}"	
+# Parameters (Change here pls)
+
+dns=${WG_DNS:-1.1.1.1}                  # dns server that the clients will use, default is empty (will be asked on execution)
 ask_question_with_default	dns		"Enter DNS address" 			"${dns}" 	
+
+hostname=${WG_HOSTNAME:-$(hostname)}    # hostname the clients will connect to, usually external, default is empty (will be ask$
 ask_question_with_default	hostname	"Enter public server address" 		"${hostname}"	
+
+serverport=${WG_PORT:-51820}            # server port for external clients
 ask_question_with_default	serverport	"Enter external server port" 		"${serverport}"	check_port
+
+user=${WG_USER:-pi}                     # user to own the copied config afterwards
+ask_question_with_default	user		"Enter user to give config to."		"${user}"	
+
+copydest=${WG_PATH:-/home/$user}/	# destination for config files to be copied to (for scp access)
+ask_question_with_default	copydest	"Where shall the config be copied to?"	"${copydest}"	
+
 
 cat << ENDCLIENT > client-configs/${client}@${hostname}.conf
 [Interface]
@@ -124,14 +133,21 @@ AllowedIPs = ${address}/32
 ENDSERVER
 
 echo "Copying config to ${copydest}${client}@${hostname}.conf and giving user ${user} ownership"
-cp /etc/wireguard/client-configs/${client}@${hostname}.conf ${copydest}${client}@${hostname}.conf
+cp ${workingdir}/client-configs/${client}@${hostname}.conf ${copydest}${client}@${hostname}.conf
 chown $user ${copydest}${client}@${hostname}.conf
 
+echo "Do you want to clean up the generated certificates? If you lose your config you will not be able to restore it!"
+select yn in "Yes" "No"; do
+  case $yn in
+    Yes ) rm ${workingdir}/certs/${client}-public.key ${workingdir}/certs/${client}-private.key;break;;
+    No ) echo "Keeping files...";break;;
+  esac
+done
 
 echo "Do you wish to restart Wireguard interface ${interface} now?"
 select yn in "Yes" "No"; do
-    case $yn in
-        Yes ) wg-quick down ${interface};wg-quick up ${interface};echo "${interface} was restarted!";break;;
-        No ) echo "Please restart ${interface} manually to reload the config";break;;
-    esac
+  case $yn in
+    Yes ) wg-quick down ${interface};wg-quick up ${interface};echo "${interface} was restarted!";break;;
+    No ) echo "Please restart ${interface} manually to reload the config";break;;
+  esac
 done
