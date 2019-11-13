@@ -1,0 +1,53 @@
+##############################
+#                            #
+#   Wireguard Configurator   #
+#                            #
+##############################
+
+# config file
+
+# config version, gets checked by scripts. DO NOT CHANGE!
+configversion=1
+
+# main directory, defaults to /etc/wireguard/
+maindir=
+# cert subdirectory, defaults to ./certificates/
+certdir=
+# config subdirectory, defaults to ./client-configs/
+confdir=
+# interface to configure, defaults to wg0
+wginterface=
+# network (/24) to use for vpn clients, only use first 3 octets, defaults to 10.255.255.
+wgnetwork=
+# server ip address within the given network, defaults to 1
+wgserverip=
+# server port for wireguard to listen on, defaults to 51820
+wgserverport=
+# client config: dns server that was pushed, defaults to 1.1.1.1
+wgclientdns=
+# client config: hostname to connect to, defaults to system hostname
+wgclienthostname=
+# client config: port that the client connects to, defaults to wgserverport
+wgclientport=
+# generator: user that owns the copy of the client configs
+wgcopyuser=
+# generator: folder to copy client configs to
+wgcopydest=
+
+
+# github download url
+giturl=https://raw.githubusercontent.com/NiiWiiCamo/wireguard-configurator/master/
+
+# default values:
+maindir=${maindir:-/etc/wireguard/}
+certdir=${certdir:-${maindir}certs/}
+confdir=${confdir:-${maindir}client-configs/}
+wginterface=${wginterface:-wg0}
+wgnetwork=${wgnetwork:-10.255.255.}
+wgserverip=${wgserverip:-1}
+wgserverport=${wgserverport:-51820}
+wgclientdns=${clientdns:-1.1.1.1}
+wgclienthostname=${wgclienthostname:-$(hostname)}
+wgclientport=${wgclientport:-${wgserverport}}
+wgcopyuser=${wgcopyuser:-${SUDO_USER}}
+wgcopydest=${wgcopydest:-/home/${wgcopyuser}/wireguard-configs/}
