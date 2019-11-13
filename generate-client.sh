@@ -56,7 +56,7 @@ check_ip(){
 interface=${WG_INTERFACE:-wg0}          # wireguard interface to configure, default: wg0
 ask_question_with_default	interface	"Enter interface to be configured" 	"${interface}"	
 
-workingdir=${WG_PWD:-auto}              # working directory default: auto=scriptdir
+workingdir=${WG_PWD:-/etc/wireguard}              # working directory default: auto=scriptdir
 network=${WG_NETWORK:-10.255.255.}      # first three network octets (currently only /24 supported), default: 10.255.255.
 
 
