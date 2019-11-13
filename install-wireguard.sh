@@ -59,6 +59,17 @@ mkdir client-configs
 echo "Generating private and public keys for the server..."
 wg genkey | tee certs/server-private.key | wg pubkey > certs/server-public.key
 
+# create wg0.conf
+echo "Generating wg0.conf..."
+cat << ENDINTERFACE > wg0.conf
+[Interface]
+Address = 10.255.255.1/24
+ListenPort = 51820
+PrivateKey = IMahti0qU7clGiYerBLZYfvsJkni4r7pC7I+W93ZY3E=
+PostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -A F$
+PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -D$
+ENDINTERFACE
+
 echo "You can create client certs and configs with generate-client.sh. Be sure to run those as root as well."
 echo "Server needs to reboot. Reboot now?"
 select yn in "Yes" "No"; do
