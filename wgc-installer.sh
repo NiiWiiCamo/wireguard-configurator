@@ -88,6 +88,7 @@ ListenPort = ${wgserverport}
 PrivateKey = ${srvprivkey}
 PostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -A F$
 PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -D$
+SaveConfig = true
 
 #############################
 # Client configs below here #
@@ -111,8 +112,8 @@ else
     *)
       wget -O ${maindir}wgc-generator.sh ${giturl}wgc-generator.sh 2>/dev/null || curl ${giturl}wgc-generator.sh --output ${maindir}wgc-generator.sh 2>/dev/null || echo "Please install either wget or curl, or download it manually from ${giturl}wgc-generator.sh";;
 esac
-
 unset response
+
 
 read -r -n 1 -p "The server should be rebooted after the installation. Reboot now? [Y/n] " response
 case "$response" in
@@ -122,3 +123,4 @@ case "$response" in
     echo "Rebooting now...";
     reboot now;;
 esac
+unset response
