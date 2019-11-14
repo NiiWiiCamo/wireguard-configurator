@@ -9,7 +9,7 @@
 # configurator
 
 # set expected config version
-installerver=1
+generatorver=1
 
 # root check
 if ! [ $(id -u) -eq 0 ]
@@ -29,9 +29,9 @@ else
 fi
 
 # check config version
-if ! [ ${installerver} -eq ${configver} ]
+if ! [ ${generatorver} -eq ${configver} ]
 then
-  echo "Wrong config version found. Please get the current versions of the script and config. You can use wgc-update.sh for tha$
+  echo "Wrong config version found. Please get the current versions of the script and config. You can use wgc-update.sh for that"
   exit 2
 else
   echo "Read config file with version ${configver}."
@@ -91,12 +91,38 @@ check_ip(){
   fi
 }
 
-# Get first free ip address in defined subnet
 
+############## MAIN SCRIPT ################
 
-
-ask_question_with_default 
+# go to maindir
+cd ${maindir}
 
 # ask for interface to be configured
-ask_question_with_default interface "Enter interface to be configured" "${wginterface}"
+ask_question_with_default wginterface "Enter interface to be configured" "${wginterface}"
 
+# Get first free ip address in defined subnet
+echo "Checking for first free IP in network ${wgnetwork}0/24."
+for host in {1..254}
+do
+	clientip=${wgnetwork}${host}
+	if ! [ grep -q ${clientip} ${wginterface}.conf ]
+	then
+		echo "Found IP: ${clientip}"
+		break
+	fi
+done
+
+# check for first free assignable client name
+for client in {1..99}
+do
+	unnamedclient=${wgclientdefaultname}${client}
+	if ! [ grep -q ${unnamedclient} ${wginterface}.conf ]
+	then
+		break
+	fi
+done
+# ask for custom client name
+ask_question_with_default wgclientname "What should this client be called?" "${unnamedclient}"
+
+# get client config parameters
+ask_question_with_default wgclienthostname

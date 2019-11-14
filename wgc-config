@@ -11,43 +11,56 @@ configversion=1
 
 # main directory, defaults to /etc/wireguard/
 maindir=
+maindir=${maindir:-/etc/wireguard/}
+
 # cert subdirectory, defaults to ./certificates/
 certdir=
+certdir=${certdir:-${maindir}certs/}
+
 # config subdirectory, defaults to ./client-configs/
 confdir=
+confdir=${confdir:-${maindir}client-configs/}
+
 # interface to configure, defaults to wg0
 wginterface=
+wginterface=${wginterface:-wg0}
+
 # network (/24) to use for vpn clients, only use first 3 octets, defaults to 10.255.255.
 wgnetwork=
+wgnetwork=${wgnetwork:-10.255.255.}
+
 # server ip address within the given network, defaults to 1
 wgserverip=
+wgserverip=${wgserverip:-1}
+
 # server port for wireguard to listen on, defaults to 51820
 wgserverport=
+wgserverport=${wgserverport:-51820}
+
+# default name for clients, will increment the number, defaults to client-#
+wgclientdefaultname=
+wgclientdefaultname=${wgclientdefaultname:-client\-}
+
 # client config: dns server that was pushed, defaults to 1.1.1.1
 wgclientdns=
+wgclientdns=${wgclientdns:-1.1.1.1}
+
 # client config: hostname to connect to, defaults to system hostname
 wgclienthostname=
+wgclienthostname=${wgclienthostname:-$(hostname)}
+
 # client config: port that the client connects to, defaults to wgserverport
 wgclientport=
+wgclientport=${wgclientport:-${wgserverport}}
+
 # generator: user that owns the copy of the client configs
 wgcopyuser=
+wgcopyuser=${wgcopyuser:-${SUDO_USER}}
+
 # generator: folder to copy client configs to
 wgcopydest=
+wgcopydest=${wgcopydest:-/home/${wgcopyuser}/wireguard-configs/}
 
 
 # github download url
 giturl=https://raw.githubusercontent.com/NiiWiiCamo/wireguard-configurator/master/
-
-# default values:
-maindir=${maindir:-/etc/wireguard/}
-certdir=${certdir:-${maindir}certs/}
-confdir=${confdir:-${maindir}client-configs/}
-wginterface=${wginterface:-wg0}
-wgnetwork=${wgnetwork:-10.255.255.}
-wgserverip=${wgserverip:-1}
-wgserverport=${wgserverport:-51820}
-wgclientdns=${clientdns:-1.1.1.1}
-wgclienthostname=${wgclienthostname:-$(hostname)}
-wgclientport=${wgclientport:-${wgserverport}}
-wgcopyuser=${wgcopyuser:-${SUDO_USER}}
-wgcopydest=${wgcopydest:-/home/${wgcopyuser}/wireguard-configs/}
