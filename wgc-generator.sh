@@ -125,4 +125,17 @@ done
 ask_question_with_default wgclientname "What should this client be called?" "${unnamedclient}"
 
 # get client config parameters
-ask_question_with_default wgclienthostname
+ask_question_with_default wgclienthostname "What address (hostname or external IP) does the client connect to?"
+ask_question_with_default wgclientport "What port does the client connect to?"
+ask_question_with_default wgclientdns "What DNS server shall the client use?"
+
+# ask if config shall be copied to userhome
+read -r -n 1 -p "Do you want the client config copied to ${wgcopydest} ? [Y/n] " response
+case "$response" in
+  [nN])
+	  copyconfig=false;;
+  *)
+	  mkdir -p ${wgcopydest}
+      copyconfig=true;;
+esac
+
