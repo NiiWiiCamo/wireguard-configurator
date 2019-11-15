@@ -39,7 +39,7 @@ fi
 
 # update and upgrade
 echo "Updating packet list and upgrading packets..."
-apt-get update
+apt-get update >/dev/null
 apt-get -q -y upgrade
 
 # check for Raspberry PI
@@ -59,7 +59,7 @@ printf 'Package: *\nPin: release a=unstable\nPin-Priority: 150\n' | tee --append
 
 # update and install wireguard
 echo "Updating packet list and installing wireguard..."
-apt-get update
+apt-get update >/dev/null
 apt-get -q -y install wireguard
 
 # activate ipv4 forwarding in /etc/sysctl.conf
@@ -74,7 +74,7 @@ mkdir -p ${certdir}
 echo "Generating server private and public keypair..."
 srvprivkey=$(wg genkey)
 srvpubkey=$(echo ${srvprivkey} | wg pubkey)
-cat srvpubkey > ${certdir}server-public.key
+echo ${srvpubkey} > ${certdir}server-public.key
 
 # create interface config
 echo "Generating ${wginterface}.conf..."
@@ -112,6 +112,7 @@ else
     *)
       wget -O ${maindir}wgc-generator.sh ${giturl}wgc-generator.sh 2>/dev/null || curl ${giturl}wgc-generator.sh --output ${maindir}wgc-generator.sh 2>/dev/null || echo "Please install either wget or curl, or download it manually from ${giturl}wgc-generator.sh";;
 esac
+fi
 unset response
 
 

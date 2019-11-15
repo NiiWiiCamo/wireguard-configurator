@@ -9,7 +9,7 @@
 # config file
 
 # config version, gets checked by scripts. DO NOT CHANGE!
-configversion=1
+configver=1
 
 # main directory, defaults to /etc/wireguard/
 maindir=
