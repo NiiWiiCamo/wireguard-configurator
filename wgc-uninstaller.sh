@@ -93,6 +93,7 @@ then
 fi
 
 if [ ${uninstall} -eq w ]
+then
   ${dirremove}+="${maindir}"
   echo " - Wireguard will be autoremoved.`\n - Everything in ${maindir} will be gone. Including all configs that were not exported.`\n - Your apt sources will be reset.`\n - Your IPv4 forwarding will be disabled again.`\n"
 fi
@@ -100,16 +101,18 @@ fi
 read -r -n 1 -p "Are you sure you want to commence with the actions above? [y/N]`\n" response
 case ${response} in
   [yY])
-    for dir in ${dirremove}
+    for dir in ${dirremove[@]}
     do
       rm -r ${dir}
       echo "Removed directory ${dir}.`\n"
-    done;
-    for file in ${fileremove}
+    done
+
+    for file in ${fileremove[@]}
     do
       rm ${file}
       echo "Removed file ${file}.`\n"
     done;
+
     if [ $uninstall -eq w ]
     then
       apt-get -y autoremove wireguard >/dev/null
