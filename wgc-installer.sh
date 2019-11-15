@@ -63,7 +63,7 @@ apt-get update >/dev/null
 apt-get -q -y install wireguard
 
 # activate ipv4 forwarding in /etc/sysctl.conf
-sed -i '/net.ipv4.ip_forward = 1/s/^#//g' /etc/sysctl.conf
+sed -i '/net.ipv4.ip_forward=1/s/^#//g' /etc/sysctl.conf
 
 # goto maindir and create subdirs
 cd ${maindir}
@@ -108,7 +108,7 @@ else
   read -r -n 1 -p "WGC-Generator script not found. Do you want to download it now? [Y/n] " response
   case "$response" in
     [nN])
-      break;;
+      ;;
     *)
       wget -O ${maindir}wgc-generator.sh ${giturl}wgc-generator.sh 2>/dev/null || curl ${giturl}wgc-generator.sh --output ${maindir}wgc-generator.sh 2>/dev/null || echo "Please install either wget or curl, or download it manually from ${giturl}wgc-generator.sh";;
 esac
