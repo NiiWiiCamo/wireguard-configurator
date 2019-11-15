@@ -11,6 +11,9 @@
 # set expected config version
 exporterver=1
 
+# timeout for asks
+timeout=20
+
 # root check
 if ! [ $(id -u) -eq 0 ]
 then
@@ -49,9 +52,9 @@ fi
 # check for other server config files
 for file in ${maindir}*
 do
-  if [ ${file: -5} -eq ".conf" ]
+  if [ ${file} = *.conf ]
   then
-    read -r -n 1 -p "Found additional config ${maindir}${file}.conf! Export? [Y/n]" response
+    read -r -n 1 -p "Found additional config ${maindir}${file}.conf! Export? [Y/n]" response ":" -t ${timeout}
     case ${response}
       [nN])
         break;;
@@ -65,14 +68,15 @@ done
 
 # check client configs
 echo "Checking for client configs in ${confdir}..."
+counter=0
 for file in ${confdir}*
 do
-  if [ ${file: -5} -eq ".conf" ]
+  if [ ${file} -eq *.conf ]
   then
     counter++
   fi
 done
-read -r -n 1 -p "Found ${counter} configs in ${confdir} . Export? [Y/n]?" response
+read -r -n 1 -p "Found ${counter} configs in ${confdir} . Export? [Y/n]?" response -i ":" -t ${timeout}
 unset counter
 case ${response} in
   [nN])
@@ -80,7 +84,7 @@ case ${response} in
   *)
     for file in ${confdir}*
     do
-      if [ ${file: -5} -eq ".conf" ]
+      if [ ${file} -eq +.conf ]
       then
         toexport+=${confdir}${file}
       fi
@@ -90,7 +94,7 @@ unset response
 
 
 # where do you want the tarball to land? (output: ${exportdir})
-read -r -p "Where do you want the tarball to be placed?" response
+read -r -p "Where do you want the tarball to be placed?" exportdir -i ";" -t ${timeout}
 if  [ -z ${exportdir} ]
 then
   exportdir="/home/${SUDO_USER}/wireguard-export/"
@@ -109,7 +113,7 @@ do
 done
 
 # ask for filetree export
-read -r -n 1 -p "Do you want to export as filetree in addition to tarball? [Y/n]" response
+read -r -n 1 -p "Do you want to export as filetree in addition to tarball? [Y/n]" response -i ";" -t ${timeout}
 case ${response} in
   [nN])
     ;;
