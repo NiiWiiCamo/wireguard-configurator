@@ -105,7 +105,7 @@ echo "Checking for first free IP in network ${wgnetwork}0/24."
 for host in {1..254}
 do
 	clientip=${wgnetwork}${host}
-	if ! [ grep -q ${clientip} ${wginterface}.conf ]
+	if ! [ grep -q "${clientip}" "${wginterface}.conf" ];
 	then
 		echo "Found IP: ${clientip}"
 		break
@@ -116,7 +116,7 @@ done
 for client in {1..99}
 do
 	unnamedclient=${wgclientdefaultname}${client}
-	if ! [ grep -q ${unnamedclient} ${wginterface}.conf ]
+	if ! [ grep -q "${unnamedclient}" ${wginterface}.conf ]
 	then
 		break
 	fi
