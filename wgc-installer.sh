@@ -18,6 +18,9 @@ then
   exit 1
 fi
 
+# set working dir as script dir
+cd "${0%/*}"
+
 # read wgc-config
 echo "Checking config file..."
 if [ -f wgc-config ]
