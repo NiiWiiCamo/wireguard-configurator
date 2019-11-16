@@ -92,39 +92,45 @@ echo -e "\nYou chose to do the following:"
 
 if [ ${uninstall} = "o" ]
 then
-  ${dirremove}+=( "${confdir}" )
-  ${fileremove}+=( "${maindir}${wginterface}.conf" )
+  dirremove=("${dirremove[@]}" "${confdir}")
+  fileremove=("${fileremove[@]}" "${maindir}${wginterface}.conf")
   echo -e "\n - ${confdir} including all contents will be gone.\n - Your ${wginterface}.conf will be gone."
 fi
 
 if [ ${uninstall} = "w" ]
 then
-  ${dirremove}+=( "${maindir}" )
+  dirremove=("${dirremove[@]}" "${maindir}")
   echo -e "\n - Wireguard will be autoremoved.\n - Everything in ${maindir} will be gone. Including all configs that were not exported.\n - Your apt sources will be reset.\n - Your IPv4 forwarding will be disabled again.\n"
 fi
 
 read -r -n 1 -p "Are you sure you want to commence with the actions above? [y/N]" response
+echo -e "\n"
 case ${response} in
   [yY])
     for dir in ${dirremove[@]}
     do
-      rm -r ${dir}
-      echo "Removed directory ${dir}."
+      rm -r ${dir} 2>/dev/null
+      echo -e "\nRemoved directory ${dir}."
     done;
 
     for file in ${fileremove[@]}
     do
-      rm ${file}
-      echo "Removed file ${file}."
+      rm ${file} 2>/dev/null
+      echo -e "\nRemoved file ${file}."
     done;
 
     if [ $uninstall = "w" ]
     then
       apt-get -y autoremove wireguard >/dev/null
-      sed -z -i 'deb http://deb.debian.org/debian/ unstable main' /etc/apt/sources.list.d/unstable.list
+      echo -e "\n Uninstalled wireguard (autoremove)."
+      sed -z -i '/unstable main$/d' /etc/apt/sources.list.d/unstable.list
+      echo -e "\nRemoved unstable packet sources."
       apt-key del 04EE7237B7D453EC
-      sed -z -i 'Package: *\nPin: release a=unstable\nPin-Priority: 150\n' /etc/apt/preferences.d/limit-unstable
+      echo -e "\nRemoved apt key 04EE7237B7D453EC."
+      sed -z -i '/Package: *\nPin: release a=unstable\nPin-Priority: 150\n/d' /etc/apt/preferences.d/limit-unstable
+      echo -e "\nReset apt preference for unstable list."
       sed -i '/net.ipv4.ip_forward = 1/s/^/#/g' /etc/sysctl.conf
+      echo -e "\nReset IPv4 forwarding in /etc/sysctl.conf"
     fi
     ;;
   [*])
