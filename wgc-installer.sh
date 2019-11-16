@@ -47,7 +47,7 @@ echo "Checking if you are running on a Raspberry PI..."
 if grep -q Raspberry /proc/device-tree/model
 then
   echo "You are running on a Raspberry PI. Downloading an additional packet..."
-  apt-get -q -y install raspberry-kernel-headers
+  apt-get -q -y install raspberry-kernel-headers >/dev/null
 else
   echo "You are running a $(uname -o) on $(uname -r) architechture."
 fi
@@ -60,7 +60,7 @@ printf 'Package: *\nPin: release a=unstable\nPin-Priority: 150\n' | tee --append
 # update and install wireguard
 echo "Updating packet list and installing wireguard..."
 apt-get update >/dev/null
-apt-get -q -y install wireguard
+apt-get -q -y install wireguard >/dev/null
 
 # activate ipv4 forwarding in /etc/sysctl.conf
 sed -i '/net.ipv4.ip_forward=1/s/^#//g' /etc/sysctl.conf

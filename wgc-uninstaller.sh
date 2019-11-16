@@ -40,10 +40,22 @@ else
   read -r -p "Could not find wgc-conf! Where are your configs? Default should be /etc/wireguard/ ." uninstalldir
 fi
 
-configexport=false
+
+# check for Raspberry PI
+if grep -q Raspberry /proc/device-tree/model
+then
+  runningon="raspbian"
+fi
+
 
 # ask for level or cleaning
-echo -e "\nWhat do you want to remove? \n[o]nly wgc scripts and configs, I want to keep wireguard installed.\n[w]ireguard and all configs and scripts. Please reset my system to what it was before.\n[e]xport all server and client configs. Don't remove anything.\n[N]othing. I want to keep everything."
+configexport=false
+echo ""
+echo "\nWhat do you want to remove?"
+echo "[o]nly wgc scripts and configs, I want to keep wireguard installed."
+echo "[w]ireguard and all configs and scripts. Please reset my system to what it was before."
+echo "[e]xport all server and client configs. Don't remove anything."
+echo "[N]othing. I want to keep everything."
 read -r -n 1 response
 case ${response} in
   [oO])
@@ -78,6 +90,25 @@ then
 fi
 
 
+
+############ CHECK FOR SYSTEM SPECIFICS ###############
+
+# ask for raspberrypi-kernel-headers
+if [ ${runningon} = "raspbian" ]
+then
+  echo "You are running on a Raspberry PI."
+  echo ""
+  read -r -n 1 -p "Do you want raspberry-kernel-headers to be uninstalled, too? [Y/n]" response
+  echo ""
+  case ${response} in
+    [nN])
+      removerkh="false"
+    *)
+      removerkh="true"
+  esac
+fi
+
+
 ############ LIST ALL THINGS TO BE DONE ##############
 declare -a dirremove
 declare -a fileremove
@@ -100,7 +131,16 @@ fi
 if [ ${uninstall} = "w" ]
 then
   dirremove=("${dirremove[@]}" "${maindir}")
-  echo -e "\n - Wireguard will be autoremoved.\n - Everything in ${maindir} will be gone. Including all configs that were not exported.\n - Your apt sources will be reset.\n - Your IPv4 forwarding will be disabled again.\n"
+  echo ""
+  echo " - Wireguard will be autoremoved."
+  if [ ${removerkh} = "true" ]
+  then
+    echo " - RaspberryPi-Kernel-Headers will be autoremoved."
+  fi
+  echo " - Everything in ${maindir} will be gone. Including all configs that were not exported."
+  echo " - Your apt sources will be reset."
+  echo " - Your IPv4 forwarding will be disabled again."
+  echo ""
 fi
 
 read -r -n 1 -p "Are you sure you want to commence with the actions above? [y/N]" response
@@ -121,8 +161,13 @@ case ${response} in
 
     if [ $uninstall = "w" ]
     then
+      if [ ${removerkh} = "true" ]
+      then
+        apt-get -y autoremove raspberry-kernel-headers >/dev/null
+        echo -e "\nUninstalled raspberry-kernel-headers (autoremove)."
+      fi
       apt-get -y autoremove wireguard >/dev/null
-      echo -e "\n Uninstalled wireguard (autoremove)."
+      echo -e "\nUninstalled wireguard (autoremove)."
       sed -z -i '/unstable main$/d' /etc/apt/sources.list.d/unstable.list
       echo -e "\nRemoved unstable packet sources."
       apt-key del 04EE7237B7D453EC
