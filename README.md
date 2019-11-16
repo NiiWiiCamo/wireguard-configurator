@@ -12,12 +12,12 @@ If you find any mistakes/bad scripting, tell me where and what. I am a Bash n00b
 
 Current status:
 
-wgc-config		Contains all the parameters
-wgc-installer		Installs wireguard and sets up your system
-wgc-generator		Generates Client configs including keys and adds them to the server config.
-wgc-uninstaller		Undoes everything wgc-installer does. Asks for export, calls wgc-exporter.
-wgc-exporter		Exports your created config files to a tarball and optionally as filetree.
+- wgc-config		Contains all the parameters
+- wgc-installer		Installs wireguard and sets up your system
+- wgc-generator		Generates Client configs including keys and adds them to the server config.
+- wgc-uninstaller		Undoes everything wgc-installer does. Asks for export, calls wgc-exporter.
+- wgc-exporter		Exports your created config files to a tarball and optionally as filetree.
 
-wgc-ungenerator	(TBD)	Undoes everything wgc-generator does and removes specific client configs.
-wgc-importer	(TBD)	Imports existing configs, will be called by wgc-installer.
-wgc-master	(TBD)	Master of puppets, master suite to call all other scripts. For convenience only.
+- wgc-ungenerator	(TBD)	Undoes everything wgc-generator does and removes specific client configs.
+- wgc-importer	(TBD)	Imports existing configs, will be called by wgc-installer.
+- wgc-master	(TBD)	Master of puppets, master suite to call all other scripts. For convenience only.
