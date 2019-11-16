@@ -24,50 +24,55 @@ if [ -f wgc-config ]
 then
   source wgc-config
   # check config version
-  if ! [ ${installerver} -eq ${configver} ]
+  if ! [ ${uninstallerver} -eq ${configver} ]
   then
     echo "Wrong config version found. Proceeding with default cleaning."
     defaults=true
   else
     echo "Read config file with version ${configver}."
   fi
-else if [ -f /etc/wireguard/wgc-config ]
+elif [ -f /etc/wireguard/wgc-config ]
 then
+  echo "Found config at /etc/wireguard/wgc-config."
   uninstalldir=/etc/wireguard/
 else
   echo "Config file not found"
-  read -r -p "Could not find wgc-conf! Where are your configs? Default should be /etc/wireguard/ .`\n" uninstalldir
+  read -r -p "Could not find wgc-conf! Where are your configs? Default should be /etc/wireguard/ ." uninstalldir
 fi
 
-read -r -n 1 -p "What do you want to remove?`\n [o]nly wgc scripts and configs, I want to keep wireguard installed.`\n[w]ireguard and all configs and scripts. Please reset my system to what it was before.`\n[e]xport all server and client configs. Don't remove anything.`\n[N]othing. I want to keep everything.`\n" response
+configexport=false
+
+# ask for level or cleaning
+echo -e "\nWhat do you want to remove? \n[o]nly wgc scripts and configs, I want to keep wireguard installed.\n[w]ireguard and all configs and scripts. Please reset my system to what it was before.\n[e]xport all server and client configs. Don't remove anything.\n[N]othing. I want to keep everything."
+read -r -n 1 response
 case ${response} in
   [oO])
-    uninstall=o;break;;
+    uninstall=o;;
   [wW])
-    uninstall=w;break;;
+    uninstall=w;;
   [eE])
-    uninstall=n;configexport=true;break;;
+    uninstall=n;configexport=true;;
   [*])
     echo "Nothing will be changed. If you wanted to remove a single client config, use wgc-ungenerator.sh";exit;;
 esac
 unset response
 
-if [ ${uninstall} -eq o -o ${uninstall} -eq w ]
+echo "\n"
+if [ ${uninstall} = "o" -o ${uninstall} = "w" ]
 then
-  read -r -n 1 -p "Do you want to export all the configs first? [Y/n]`\n" response
+  read -r -n 1 -p "Do you want to export all the configs first? [Y/n]" response
   case ${response} in
     [nN])
-      configexport=false;break;;
+      configexport=false;;
     *)
-      configexport=true;break;;
+      configexport=true;;
   esac
 fi
 unset response
 
 # config exporter
-if [ ${configexport} ]
+if [ ${configexport} = true ]
 then
-  clear
   echo "Starting wgc-exporter.sh..."
   source wgc-exporter.sh
 fi
@@ -76,53 +81,55 @@ fi
 ############ LIST ALL THINGS TO BE DONE ##############
 declare -a dirremove
 declare -a fileremove
-clear
+
 if [ ${defaults} ]
 then
   confdir="/etc/wireguard/client-configs/"
   maindir="/etc/wireguard/"
 fi
 
-echo "You chose to do the following:`\n"
+echo -e "\nYou chose to do the following:"
 
-if [ ${uninstall} -eq o ]
+if [ ${uninstall} = "o" ]
 then
-  ${dirremove}+="${confdir}"
-  ${fileremove}+="${maindir}${wginterface}.conf"
-  echo " - ${confdir} including all contents will be gone.`\n - Your ${wginterface}.conf will be gone.`\n"
+  ${dirremove}+=( "${confdir}" )
+  ${fileremove}+=( "${maindir}${wginterface}.conf" )
+  echo -e "\n - ${confdir} including all contents will be gone.\n - Your ${wginterface}.conf will be gone."
 fi
 
-if [ ${uninstall} -eq w ]
+if [ ${uninstall} = "w" ]
 then
-  ${dirremove}+="${maindir}"
-  echo " - Wireguard will be autoremoved.`\n - Everything in ${maindir} will be gone. Including all configs that were not exported.`\n - Your apt sources will be reset.`\n - Your IPv4 forwarding will be disabled again.`\n"
+  ${dirremove}+=( "${maindir}" )
+  echo -e "\n - Wireguard will be autoremoved.\n - Everything in ${maindir} will be gone. Including all configs that were not exported.\n - Your apt sources will be reset.\n - Your IPv4 forwarding will be disabled again.\n"
 fi
 
-read -r -n 1 -p "Are you sure you want to commence with the actions above? [y/N]`\n" response
+read -r -n 1 -p "Are you sure you want to commence with the actions above? [y/N]" response
 case ${response} in
   [yY])
     for dir in ${dirremove[@]}
     do
       rm -r ${dir}
-      echo "Removed directory ${dir}.`\n"
-    done
+      echo "Removed directory ${dir}."
+    done;
 
     for file in ${fileremove[@]}
     do
       rm ${file}
-      echo "Removed file ${file}.`\n"
+      echo "Removed file ${file}."
     done;
 
-    if [ $uninstall -eq w ]
+    if [ $uninstall = "w" ]
     then
       apt-get -y autoremove wireguard >/dev/null
       sed -z -i 'deb http://deb.debian.org/debian/ unstable main' /etc/apt/sources.list.d/unstable.list
-      apt-key delete 04EE7237B7D453EC
+      apt-key del 04EE7237B7D453EC
       sed -z -i 'Package: *\nPin: release a=unstable\nPin-Priority: 150\n' /etc/apt/preferences.d/limit-unstable
       sed -i '/net.ipv4.ip_forward = 1/s/^/#/g' /etc/sysctl.conf
-    fi;;
-  *)
-    echo "Nothing was removed.";
+    fi
+    ;;
+  [*])
+    echo -e "\nNothing was removed.\n";
     exit;;
 esac
-echo "Script finished. Thank you, come again!"
+echo -e "Script finished.\nPress any key or wait 10 seconds to exit."
+read -t 10 -n 1
