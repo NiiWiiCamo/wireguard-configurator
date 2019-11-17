@@ -9,11 +9,15 @@
 # config file
 
 # config version, gets checked by scripts. DO NOT CHANGE!
-configver=1
+configver=2
 
 # main directory, defaults to /etc/wireguard/
 maindir=
 maindir=${maindir:-/etc/wireguard/}
+
+# wgc dirrectory, defaults to ./wgc/
+wgcdir=
+wgcdir=${wgcdir:-${maindir}wgc/}
 
 # cert subdirectory, defaults to ./certificates/
 certdir=

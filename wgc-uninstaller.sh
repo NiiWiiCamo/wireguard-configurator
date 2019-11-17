@@ -9,7 +9,7 @@
 # uninstaller
 
 # set expected config version
-uninstallerver=1
+uninstallerver=2
 
 # root check
 if ! [ $(id -u) -eq 0 ]
@@ -18,8 +18,26 @@ then
   exit 1
 fi
 
+clear
+echo "##########################################"
+echo "#                                        #"
+echo "#  WireGuard Configurator | Uninstaller  #"
+echo "#                                        #"
+echo "##########################################"
+echo ""
+echo "Welcome to the Wireguard Configurator Suite!"
+echo "You have opened the uninstaller. This tool allows you to uninstall WGC and Wireguard!"
+echo ""
+
 # set working dir as script dir
-cd "${0%/*}"
+#cd "${0%/*}"
+scriptdir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+if ! [ "${scriptdir}" -ef "${wgcdir}" ]
+then
+  echo "This script is not in the default location! Proceed with caution..."
+  sleep 5
+fi
+cd ${scriptdir}
 
 
 # read wgc-config
@@ -41,12 +59,13 @@ then
   uninstalldir=/etc/wireguard/
 else
   echo "Config file not found"
-  read -r -p "Could not find wgc-conf! Where are your configs? Default should be /etc/wireguard/ ." uninstalldir
+  read -s -r -p "Could not find wgc-conf! Where are your configs? Default should be /etc/wireguard/ ." uninstalldir
 fi
 
+runningon="debian"
 
 # check for Raspberry PI
-if grep -q Raspberry /proc/device-tree/model
+if grep -q "Raspberry" /proc/device-tree/model 2>/dev/null
 then
   runningon="raspbian"
 fi
@@ -55,12 +74,12 @@ fi
 # ask for level or cleaning
 configexport=false
 echo ""
-echo "\nWhat do you want to remove?"
+echo "What do you want to remove?"
 echo "[o]nly wgc scripts and configs, I want to keep wireguard installed."
 echo "[w]ireguard and all configs and scripts. Please reset my system to what it was before."
 echo "[e]xport all server and client configs. Don't remove anything."
 echo "[N]othing. I want to keep everything."
-read -r -n 1 response
+read -s -r -n 1 response
 case ${response} in
   [oO])
     uninstall=o;;
@@ -73,10 +92,10 @@ case ${response} in
 esac
 unset response
 
-echo "\n"
+echo ""
 if [ ${uninstall} = "o" -o ${uninstall} = "w" ]
 then
-  read -r -n 1 -p "Do you want to export all the configs first? [Y/n]" response
+  read -s -r -n 1 -p "Do you want to export all the configs first? [Y/n]" response
   case ${response} in
     [nN])
       configexport=false;;
@@ -98,17 +117,18 @@ fi
 ############ CHECK FOR SYSTEM SPECIFICS ###############
 
 # ask for raspberrypi-kernel-headers
+removerkh="false"
 if [ ${runningon} = "raspbian" ]
 then
   echo "You are running on a Raspberry PI."
   echo ""
-  read -r -n 1 -p "Do you want raspberry-kernel-headers to be uninstalled, too? [Y/n]" response
+  read -s -r -n 1 -p "Do you want raspberry-kernel-headers to be uninstalled, too? [Y/n]" response
   echo ""
   case ${response} in
     [nN])
-      removerkh="false"
+      removerkh="false";;
     *)
-      removerkh="true"
+      removerkh="true";;
   esac
 fi
 
@@ -123,13 +143,16 @@ then
   maindir="/etc/wireguard/"
 fi
 
-echo -e "\nYou chose to do the following:"
+echo ""
+echo ""
+echo "You chose to do the following:"
 
 if [ ${uninstall} = "o" ]
 then
   dirremove=("${dirremove[@]}" "${confdir}")
   fileremove=("${fileremove[@]}" "${maindir}${wginterface}.conf")
-  echo -e "\n - ${confdir} including all contents will be gone.\n - Your ${wginterface}.conf will be gone."
+  echo " - ${confdir} including all contents will be gone."
+  echo " - Your ${wginterface}.conf will be gone."
 fi
 
 if [ ${uninstall} = "w" ]
@@ -147,20 +170,20 @@ then
   echo ""
 fi
 
-read -r -n 1 -p "Are you sure you want to commence with the actions above? [y/N]" response
-echo -e "\n"
+read -s -r -n 1 -p "Are you sure you want to commence with the actions above? [y/N]" response
+echo ""
 case ${response} in
   [yY])
     for dir in ${dirremove[@]}
     do
       rm -r ${dir} 2>/dev/null
-      echo -e "\nRemoved directory ${dir}."
+      echo "Removed directory ${dir}."
     done;
 
     for file in ${fileremove[@]}
     do
       rm ${file} 2>/dev/null
-      echo -e "\nRemoved file ${file}."
+      echo "Removed file ${file}."
     done;
 
     if [ $uninstall = "w" ]
@@ -168,23 +191,23 @@ case ${response} in
       if [ ${removerkh} = "true" ]
       then
         apt-get -y autoremove raspberry-kernel-headers >/dev/null
-        echo -e "\nUninstalled raspberry-kernel-headers (autoremove)."
+        echo "Uninstalled raspberry-kernel-headers (autoremove)."
       fi
       apt-get -y autoremove wireguard >/dev/null
-      echo -e "\nUninstalled wireguard (autoremove)."
+      echo "Uninstalled wireguard (autoremove)."
       sed -z -i '/unstable main$/d' /etc/apt/sources.list.d/unstable.list
-      echo -e "\nRemoved unstable packet sources."
+      echo "Removed unstable packet sources."
       apt-key del 04EE7237B7D453EC
-      echo -e "\nRemoved apt key 04EE7237B7D453EC."
+      echo "Removed apt key 04EE7237B7D453EC."
       sed -z -i '/Package: *\nPin: release a=unstable\nPin-Priority: 150\n/d' /etc/apt/preferences.d/limit-unstable
-      echo -e "\nReset apt preference for unstable list."
+      echo "Reset apt preference for unstable list."
       sed -i '/net.ipv4.ip_forward = 1/s/^/#/g' /etc/sysctl.conf
-      echo -e "\nReset IPv4 forwarding in /etc/sysctl.conf"
+      echo "Reset IPv4 forwarding in /etc/sysctl.conf"
     fi
     ;;
-  [*])
-    echo -e "\nNothing was removed.\n";
+  *)
+    echo "";
+    echo "Nothing was removed.";
     exit;;
 esac
-echo -e "Script finished.\nPress any key or wait 10 seconds to exit."
-read -t 10 -n 1
+echo "Uninstaller finished. Thank you for using WireGuard Configurator!"
