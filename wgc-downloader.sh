@@ -80,7 +80,7 @@ for file in ${wgcfiles[@]}
 do
   echo "Downloading ${file}..."
   curl -O ${giturl}${file} 2>/dev/null || wget ${giturl}${file} 2>/dev/null || echo "Either the file is missing, or you have neither cUrl nor wget installed. Please install one of those for this script."
-  if [ ${file} = *.sh ]
+  if [ "${file}" = "*.sh" ]
   then
     chmod +x ${file}
   fi
