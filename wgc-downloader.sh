@@ -87,13 +87,13 @@ do
 done
 echo ""
 echo "Finished downloading. You can now use wgc-master.sh (TBD) or any of the other scripts to get going!"
-echo ""
-echo "Thank you for using WGC - WireGuard Configurator!"
 
 # check if wireguard is installed already
-if ! apt -qq list wireguard 2>/dev/null | grep wireguard ;
+echo ""
+if apt -qq list wireguard 2>/dev/null 1> grep wireguard ;
 then
-  echo ""
+  echo "Wireguard is already installed. If you are looking to reinstall, please use wgc-uninstaller.sh!"
+else
   echo "Wireguard is not installed yet, do you want to start the install script now? [Y/n]"
   read -s -r -n 1 response
   case ${response} in
@@ -105,3 +105,6 @@ then
   esac
   unset response
 fi
+echo ""
+echo "Thank you for using WGC - WireGuard Configurator!"
+
