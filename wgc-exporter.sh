@@ -128,7 +128,7 @@ echo -e "Creating tarball...\n"
 echo "Wireguard Config Export created by wgc-export.sh on $(date)." > wgexport.txt
 tar cf ${exportdir}wgexport.tar wgexport.txt
 rm wgexport.txt
-for f in ${toexport} in
+for f in ${toexport[@]} in
 do
   tar rf ${exportdir}wgexport.tar ${f}
 done
@@ -142,7 +142,7 @@ case ${response} in
     ;;
   *)
     echo -e "Copying files to ${exportdir}...\n";
-    for f in ${toexport}
+    for f in ${toexport[@]}
     do
       cp ${f} ${exportdir}
     done;
