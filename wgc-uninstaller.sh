@@ -174,18 +174,7 @@ read -s -r -n 1 -p "Are you sure you want to commence with the actions above? [y
 echo ""
 case ${response} in
   [yY])
-    for dir in ${dirremove[@]}
-    do
-      rm -r ${dir} 2>/dev/null
-      echo "Removed directory ${dir}."
-    done;
-
-    for file in ${fileremove[@]}
-    do
-      rm ${file} 2>/dev/null
-      echo "Removed file ${file}."
-    done;
-
+    # uninstall everything
     if [ $uninstall = "w" ]
     then
       if [ ${removerkh} = "true" ]
@@ -203,7 +192,20 @@ case ${response} in
       echo "Reset apt preference for unstable list."
       sed -i '/net.ipv4.ip_forward = 1/s/^/#/g' /etc/sysctl.conf
       echo "Reset IPv4 forwarding in /etc/sysctl.conf"
-    fi
+    fi;
+
+    # remove directories
+    for dir in ${dirremove[@]}
+    do
+      rm -r ${dir} 2>/dev/null
+      echo "Removed directory ${dir}."
+    done;
+    # remove files
+    for file in ${fileremove[@]}
+    do
+      rm ${file} 2>/dev/null
+      echo "Removed file ${file}."
+    done
     ;;
   *)
     echo "";
