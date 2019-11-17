@@ -68,8 +68,20 @@ echo ""
 echo "After that this script will set up the WGC environment according to the wgc-config:"
 echo " - Creation of directories in ${maindir}"
 echo " - Generation of server keys and the main server config"
+echo ""
+echo "Do you want to start the installation? [Y/n]"
+echo ""
+read -s -r -n 1 result
+case ${result} in
+  [nN])
+    echo "The installation was aborted. Please restart the script to install.";
+    exit;;
+  *)
+    echo "Commencing with installation..."
+esac
 
 
+######### INSTALLATION ###########
 
 # update and upgrade
 echo "Updating packet list and upgrading packets..."
@@ -87,9 +99,9 @@ else
 fi
 
 # add unstable list with low priority
-cat "deb http://deb.debian.org/debian/ unstable main" >> /etc/apt/sources.list.d/unstable.list
+echo "deb http://deb.debian.org/debian/ unstable main" >> /etc/apt/sources.list.d/unstable.list
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 04EE7237B7D453EC &>/dev/null
-cat 'Package: *\nPin: release a=unstable\nPin-Priority: 150\n' >> /etc/apt/preferences.d/limit-unstable
+printf 'Package: *\nPin: release a=unstable\nPin-Priority: 150\n' >> /etc/apt/preferences.d/limit-unstable
 
 # update and install wireguard
 echo "Updating packet list and installing wireguard..."
@@ -141,7 +153,7 @@ then
   echo "You can generate client configs with ${wgcdir}wgc-generator.sh"
 else
   echo "WGC-Generator script not found. Start wgc-downloader.sh now? [Y/n]"
-  read -r -n 1 response
+  read -s -r -n 1 response
   case "$response" in
     [nN])
       ;;
@@ -153,7 +165,7 @@ fi
 unset response
 
 echo "The server should be rebooted after the installation. Reboot now? [Y/n]"
-read -r -n 1 response
+read -s -r -n 1 response
 case "$response" in
   [nN])
     echo "Please reboot manually later.";;

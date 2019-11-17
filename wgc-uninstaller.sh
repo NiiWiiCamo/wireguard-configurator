@@ -87,7 +87,7 @@ case ${response} in
     uninstall=w;;
   [eE])
     uninstall=n;configexport=true;;
-  [*])
+  *)
     echo "Nothing will be changed. If you wanted to remove a single client config, use wgc-ungenerator.sh";exit;;
 esac
 unset response
