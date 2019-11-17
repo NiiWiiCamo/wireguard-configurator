@@ -258,6 +258,7 @@ then
   echo "Copying finished client config to ${wgcopydest}..."
   mkdir -p ${wgcopydest}
   cp ${confdir}${wgclientname}@${wgclienthostname}.conf ${wgcopydest}
+  chown -R ${SUDO_USER} ${wgcopydest}
 fi
 
 echo "Finished client config is stored at ${confdir}${wgclientname}@${wgclienthostname}.conf."
