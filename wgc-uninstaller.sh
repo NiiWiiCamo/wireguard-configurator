@@ -113,7 +113,6 @@ then
 fi
 
 
-
 ############ CHECK FOR SYSTEM SPECIFICS ###############
 
 # ask for raspberrypi-kernel-headers
@@ -184,11 +183,11 @@ case ${response} in
       fi
       apt-get -y autoremove wireguard >/dev/null
       echo "Uninstalled wireguard (autoremove)."
-      sed -z -i '/unstable main$/d' /etc/apt/sources.list.d/unstable.list
+      sed -i '/unstable main$/d' /etc/apt/sources.list.d/unstable.list
       echo "Removed unstable packet sources."
       apt-key del 04EE7237B7D453EC
       echo "Removed apt key 04EE7237B7D453EC."
-      sed -z -i '/Package: *\nPin: release a=unstable\nPin-Priority: 150\n/d' /etc/apt/preferences.d/limit-unstable
+      sed -i '/Package: *\nPin: release a=unstable\nPin-Priority: 150\n/d' /etc/apt/preferences.d/limit-unstable
       echo "Reset apt preference for unstable list."
       sed -i '/net.ipv4.ip_forward = 1/s/^/#/g' /etc/sysctl.conf
       echo "Reset IPv4 forwarding in /etc/sysctl.conf"

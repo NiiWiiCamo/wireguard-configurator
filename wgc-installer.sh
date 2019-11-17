@@ -18,8 +18,20 @@ then
   exit 1
 fi
 
+clear
+echo "########################################"
+echo "#                                      #"
+echo "#  WireGuard Configurator | Installer  #"
+echo "#                                      #"
+echo "########################################"
+echo ""
+echo "Welcome to the Wireguard Configurator Suite!"
+echo "You have opened the installer. This tool will install wireguard and setup your system!"
+echo ""
+
 # set working dir as script dir
 cd "${0%/*}"
+
 
 # read wgc-config
 echo "Checking config file..."
@@ -40,17 +52,36 @@ else
   echo "Read config file with version ${configver}."
 fi
 
+
+###################### ASK ############
+echo ""
+echo "This script will install wireguard and setup your system."
+echo ""
+echo "The following actions will be performed:"
+echo " - Updating and Upgrading your system (apt-get)"
+echo " - If you are on a Raspberry Pi: Installing raspberry-kernel-headers"
+echo " - Adding the unstable packet sources and giving them a low priority"
+echo " - Updating the packet lists again"
+echo " - Installing WireGuard"
+echo " - Activating IPv4 forwarding in your /etc/sysctl.conf"
+echo ""
+echo "After that this script will set up the WGC environment according to the wgc-config:"
+echo " - Creation of directories in ${maindir}"
+echo " - Generation of server keys and the main server config"
+
+
+
 # update and upgrade
 echo "Updating packet list and upgrading packets..."
-apt-get update >/dev/null
-apt-get -q -y upgrade
+apt-get update &>/dev/null
+apt-get -q -y upgrade &>/dev/null
 
 # check for Raspberry PI
 echo "Checking if you are running on a Raspberry PI..."
 if grep -q Raspberry /proc/device-tree/model
 then
   echo "You are running on a Raspberry PI. Downloading an additional packet..."
-  apt-get -q -y install raspberry-kernel-headers >/dev/null
+  apt-get -q -y install raspberry-kernel-headers &>/dev/null
 else
   echo "You are running a $(uname -o) on $(uname -r) architechture."
 fi
@@ -62,8 +93,8 @@ printf 'Package: *\nPin: release a=unstable\nPin-Priority: 150\n' | tee --append
 
 # update and install wireguard
 echo "Updating packet list and installing wireguard..."
-apt-get update >/dev/null
-apt-get -q -y install wireguard >/dev/null
+apt-get update &>/dev/null
+apt-get -q -y install wireguard &>/dev/null
 
 # activate ipv4 forwarding in /etc/sysctl.conf
 sed -i '/net.ipv4.ip_forward=1/s/^#//g' /etc/sysctl.conf
@@ -104,16 +135,17 @@ unset srvprivkey
 unset srvpubkey
 
 # check if wgc-generator is present, if not ask for download
-if [ -f wgc-generator.sh ]
+if [ -f ${wgcdir}/wgc-generator.sh ]
 then
-  echo "You can generate client configs with ${maindir}wgc-generator.sh"
+  echo "You can generate client configs with ${wgcdir}wgc-generator.sh"
 else
-  read -r -n 1 -p "WGC-Generator script not found. Do you want to download it now? [Y/n] " response
+  read -r -n 1 -p "WGC-Generator script not found. Start wgc-downloader.sh now? [Y/n] " response
   case "$response" in
     [nN])
       ;;
     *)
-      wget -O ${maindir}wgc-generator.sh ${giturl}wgc-generator.sh 2>/dev/null || curl ${giturl}wgc-generator.sh --output ${maindir}wgc-generator.sh 2>/dev/null || echo "Please install either wget or curl, or download it manually from ${giturl}wgc-generator.sh";;
+      source ${wgcdir}/wgc-downloader.sh
+      ;;
 esac
 fi
 unset response

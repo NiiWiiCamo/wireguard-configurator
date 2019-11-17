@@ -87,4 +87,21 @@ do
 done
 echo ""
 echo "Finished downloading. You can now use wgc-master.sh (TBD) or any of the other scripts to get going!"
+echo ""
 echo "Thank you for using WGC - WireGuard Configurator!"
+
+# check if wireguard is installed already
+if ! apt -qq list wireguard 2>/dev/null | grep wireguard ;
+then
+  echo ""
+  echo "Wireguard is not installed yet, do you want to start the install script now? [Y/n]"
+  read -s -r -n 1 response
+  case ${response} in
+    [nN])
+      echo "You can use wgc-installer.sh or wgc-master.sh (TBD) to manually start the installation.";;
+    *)
+      echo "Starting wgc-installer.sh...";
+      source wgc-installer.sh;;
+  esac
+  unset response
+fi
