@@ -9,7 +9,7 @@
 # exporter
 
 # set expected config version
-exporterver=1
+exporterver=2
 
 # root check
 if ! [ $(id -u) -eq 0 ]

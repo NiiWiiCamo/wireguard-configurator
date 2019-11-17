@@ -9,7 +9,7 @@
 # configurator
 
 # set expected config version
-generatorver=1
+generatorver=2
 
 # root check
 if ! [ $(id -u) -eq 0 ]

@@ -9,7 +9,7 @@
 # installer
 
 # set expected config version
-installerver=1
+installerver=2
 
 # root check
 if ! [ $(id -u) -eq 0 ]
