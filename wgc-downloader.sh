@@ -90,7 +90,7 @@ echo "Finished downloading. You can now use wgc-master.sh (TBD) or any of the ot
 
 # check if wireguard is installed already
 echo ""
-if apt -qq list wireguard 2>/dev/null 1> grep wireguard ;
+if apt -qq list wireguard 2>/dev/null | grep wireguard ;
 then
   echo "Wireguard is already installed. If you are looking to reinstall, please use wgc-uninstaller.sh!"
 else

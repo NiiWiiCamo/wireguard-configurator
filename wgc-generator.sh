@@ -6,7 +6,7 @@
 #                            #
 ##############################
 
-# configurator
+# generator
 
 # set expected config version
 generatorver=2
@@ -31,12 +31,6 @@ echo ""
 
 # set working dir as script dir
 scriptdir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
-if ! [ "${scriptdir}" -ef "${wgcdir}" ]
-then
-  echo "This script is not in the default location! Proceed with caution..."
-  sleep 5
-fi
-cd ${scriptdir}
 
 # read wgc-config
 echo "Checking config file..."
@@ -47,6 +41,15 @@ else
   echo "Config file not found"
   exit 2
 fi
+
+# check for default location
+if ! [ "${scriptdir}" -ef "${wgcdir}" ]
+then
+  echo "This script is not in the default location! Proceed with caution..."
+  sleep 5
+fi
+cd ${scriptdir}
+
 
 # check config version
 if ! [ ${generatorver} -eq ${configver} ]
@@ -120,52 +123,65 @@ cd ${maindir}
 # ask for interface to be configured
 ask_question_with_default wginterface "Enter interface to be configured" "${wginterface}"
 
+if [ -f "${wginterface}.conf" ]
+then
+  echo "Found ${wginterface}.conf!"
+else
+  echo "Could not find ${wginterface}.conf!"
+  echo "Please check if wireguard is installed with wgc-installer.sh!"
+  exit 2
+fi
+
 # Get first free ip address in defined subnet (output ${clientip})
 echo "Checking for first free IP in network ${wgnetwork}0/24."
 for host in {1..254}
 do
-	clientip=${wgnetwork}${host}
-	if ! [ grep -q "${clientip}" "${wginterface}.conf" ];
-	then
-		echo "Found IP: ${clientip}"
-		break
-	fi
+  clientip=${wgnetwork}${host}
+  if ! grep -q "${clientip}" "${wginterface}.conf"
+  then
+    echo "Found IP: ${clientip}"
+    break
+  fi
 done
 
 # check for first free assignable client name (output ${unnamedclient})
+echo "Checking existing client names..."
 for client in {1..99}
 do
-	unnamedclient=${wgclientdefaultname}${client}
-	if ! [ grep -q "${unnamedclient}" ${wginterface}.conf ]
-	then
-		break
-	fi
+  unnamedclient=${wgclientdefaultname}${client}
+  if ! grep -q "${unnamedclient}" "${wginterface}.conf"
+  then
+    echo "Found free name ${unnamedclient}!"
+    break
+  fi
 done
 
 # ask for custom client name
 # check if client name exists already
-validclientname=false
-while ! [ ${validclientname} ]
+while true
 do
-  ask_question_with_default wgclientname "What should this client be called?" "${unnamedclient}"
-  if ! [ greq -q ${wgclientname} ${wginterface}.conf ]
+  ask_question_with_default wgclientname "What should this client be called?" ${unnamedclient}
+  if grep -q "${wgclientname}" "${wginterface}.conf"
   then
-    validclientname=true
+    echo "This client already exists. Please choose a different name."
+  else
+    break
   fi
 done
 
 # get client config parameters
-ask_question_with_default wgclienthostname "What address (hostname or external IP) does the client connect to?"
-ask_question_with_default wgclientport "What port does the client connect to?"
-ask_question_with_default wgclientdns "What DNS server shall the client use?"
+ask_question_with_default wgclienthostname "What address (hostname or external IP) does the client connect to?" ${wgclienthostname}
+ask_question_with_default wgclientport "What port does the client connect to?" ${wgclientport}
+ask_question_with_default wgclientdns "What DNS server shall the client use?" ${wgclientdns}
 
 # ask if config shall be copied to userhome (output ${copyconfig})
-read -r -n 1 -p "Do you want the client config copied to ${wgcopydest} ? [Y/n] " response
+echo "Do you want the client config copied to ${wgcopydest} ? [Y/n]"
+read -s -r -n 1 response
 case "$response" in
   [nN])
-	  copyconfig=false;;
+    copyconfig=false;;
   *)
-      copyconfig=true;;
+    copyconfig=true;;
 esac
 unset response
 
@@ -181,23 +197,27 @@ echo ""
 if [ ${copyconfig} ]
 then
   echo "Config will be copied to ${wgcopydest}"
-  mkdir -p ${wgcopydest}
-  cp ${confdir}${wgclientname}@${wgclienthostname}.conf ${wgcopydest}
-done
-echo ""
-read -r -n 1 -p "Are these settings correct? [Y/n] " response
-case "$response" in
+fi
+echo "Are these settings correct? [Y/n]"
+read -s -r -n 1 response
+case ${response} in
   [nN])
-	  echo "Nothing was written. Please restart the generator.";exit 2;;
+    echo "Nothing was written. Please restart the generator.";exit 2;;
   *)
-      break;;
+    echo "Commencing...";;
 esac
 unset response
 
 
 # generate private and public keypair for the client
 echo "Generating Keypair for the client..."
-wg genkey | tee clientprivkey | wg pubkey clientpubkey
+wg genkey | tee ${wgclientname}-priv.key | wg pubkey > ${wgclientname}-pub.key
+clientprivkey=$(cat ${wgclientname}-priv.key)
+echo "${clientprivkey}"
+clientpubkey=$(cat ${wgclientname}-pub.key)
+echo "${clientpubkey}"
+rm ${wgclientname}-priv.key
+rm ${wgclientname}-pub.key
 
 # create client config
 cat << ENDCLIENT > ${confdir}${wgclientname}@${wgclienthostname}.conf
@@ -219,11 +239,11 @@ echo "Client config generated."
 # append client to server config
 cat << ENDSERVER >> ${wginterface}.conf
 
-### Start of client config for ${wgclientname} ###
+#*# Start of client config for ${wgclientname} ###
 [Peer]
 PublicKey = ${clientpubkey}
 AllowedIPs = ${clientip}/32
-### End of client config for ${wgclientname} ###
+### End of client config for ${wgclientname} #*#
 ENDSERVER
 
 echo "Added client to server config ${wginterface}."
@@ -238,6 +258,6 @@ then
   echo "Copying finished client config to ${wgcopydest}..."
   mkdir -p ${wgcopydest}
   cp ${confdir}${wgclientname}@${wgclienthostname}.conf ${wgcopydest}
-done
+fi
 
 echo "Finished client config is stored at ${confdir}${wgclientname}@${wgclienthostname}.conf."
