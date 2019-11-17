@@ -80,6 +80,10 @@ for file in ${wgcfiles[@]}
 do
   echo "Downloading ${file}..."
   curl -O ${giturl}${file} 2>/dev/null || wget ${giturl}${file} 2>/dev/null || echo "Either the file is missing, or you have neither cUrl nor wget installed. Please install one of those for this script."
+  if [ ${file} = *.sh ]
+  then
+    chmod +x ${file}
+  fi
 done
 echo ""
 echo "Finished downloading. You can now use wgc-master.sh (TBD) or any of the other scripts to get going!"
