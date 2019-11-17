@@ -18,8 +18,26 @@ then
   exit 1
 fi
 
+clear
+echo "#######################################"
+echo "#                                     #"
+echo "#  WireGuard Configurator | Exporter  #"
+echo "#                                     #"
+echo "#######################################"
+echo ""
+echo "Welcome to the Wireguard Configurator Suite!"
+echo "You have opened the exporter. This tool can export all your WGC configs!"
+echo ""
+
 # set working dir as script dir
-cd "${0%/*}"
+scriptdir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+if ! [ "${scriptdir}" -ef "${wgcdir}" ]
+then
+  echo "This script is not in the default location! Proceed with caution..."
+  sleep 5
+fi
+cd ${scriptdir}
+
 
 # read wgc-config
 echo "Checking config file..."
@@ -48,13 +66,13 @@ fi
 declare -a toexport
 
 # check for existing server config
-echo -e "Checking for ${wginterface} server config..."
+echo "Checking for ${wginterface} server config..."
 if [ -f ${maindir}${wginterface}.conf ]
 then
-  echo -e "Found server config for ${wginterface}.conf\n"
+  echo "Found server config for ${wginterface}.conf"
   toexport+=(${maindir}${wginterface}.conf)
 else
-  echo -e "Didn't find specified server config!\n"
+  echo "Didn't find specified server config!"
 fi
 
 # check for other server config files
@@ -62,8 +80,9 @@ for file in ${maindir}*
 do
   if [ ${file} = *.conf ]
   then
-    read -r -n 1 -p "Found additional config ${maindir}${file}.conf! Export? [Y/n]" response
+    echo "Found additional config ${maindir}${file}.conf! Export? [Y/n]"
     echo ""
+    read -s -r -n 1 response
     case ${response} in
       [nN])
         break;;
@@ -76,7 +95,7 @@ done
 
 
 # check client configs
-echo -e "Checking for client configs in ${confdir}...\n"
+echo "Checking for client configs in ${confdir}..."
 counter=0
 for file in ${confdir}*
 do
@@ -85,8 +104,8 @@ do
     counter++
   fi
 done
-read -r -n 1 -p "Found ${counter} configs in ${confdir} . Export? [Y/n]?" response
-echo ""
+echo "Found ${counter} configs in ${confdir}. Export? [Y/n]?"
+read -s -r -n 1 response
 unset counter
 case ${response} in
   [nN])
@@ -106,14 +125,14 @@ unset response
 # check if anything will be exported
 if [ ${#toexport[@]} = 0 ]
 then
-  echo -e "Nothing found to export! Please check the directories manually!\n"
+  echo "Nothing found to export! Please check the directories manually!"
   exit
 fi
 
 # where do you want the tarball to land? (output: ${exportdir})
 exportdirdefault="/home/${SUDO_USER}/wireguard-export/"
-read -r -p "Where do you want the tarball to be placed? [${exportdirdefault}]" exportdir
-echo ""
+echo "Where do you want the tarball to be placed? [${exportdirdefault}]"
+read -s -r -n 1 exportdir
 if  [ -z ${exportdir} ]
 then
   exportdir=${exportdirdefault}
@@ -121,27 +140,28 @@ fi
 if ! [ -d ${exportdir} ]
 then
   mkdir -p ${exportdir}
-  echo -e "Created directory ${exportdir}.\n"
+  echo "Created directory ${exportdir}"
 fi
 
-echo -e "Creating tarball...\n"
-echo "Wireguard Config Export created by wgc-export.sh on $(date)." > wgexport.txt
-tar cf ${exportdir}wgexport.tar wgexport.txt
-rm wgexport.txt
+echo "Creating tarball..."
+echo "Wireguard Config Export created by wgc-export.sh on $(date)." > wgcexport.txt
+echo "Exported files:" >> wgcexport.txt
+tar cf ${exportdir}wgcexport.tar wgcexport.txt
 for f in ${toexport[@]} in
 do
-  tar rf ${exportdir}wgexport.tar ${f}
+  echo ${f} >> wgcexport.txt
+  tar rf ${exportdir}wgcexport.tar ${f}
 done
-echo -e "Tarball finished. You can find it at ${exportdir}wgcexport.tar"
+echo "Tarball finished. You can find it at ${exportdir}wgcexport.tar"
 
 # ask for filetree export
-read -r -n 1 -p "Do you want to export as filetree in addition to tarball? [Y/n]" response
-echo ""
+echo "Do you want to export as filetree in addition to tarball? [Y/n]"
+read -s -r -n 1 response
 case ${response} in
   [nN])
     ;;
   *)
-    echo -e "Copying files to ${exportdir}...\n";
+    echo "Copying files to ${exportdir}...";
     for f in ${toexport[@]}
     do
       cp ${f} ${exportdir}
@@ -149,4 +169,5 @@ case ${response} in
     ;;
 esac
 chown -R ${SUDO_USER} ${exportdir}
-echo -e "Export finished. Exiting..."
+rm wgcexport.txt
+echo "Export finished. Exiting..."

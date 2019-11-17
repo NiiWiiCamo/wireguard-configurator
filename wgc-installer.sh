@@ -30,8 +30,13 @@ echo "You have opened the installer. This tool will install wireguard and setup 
 echo ""
 
 # set working dir as script dir
-cd "${0%/*}"
-
+scriptdir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+if ! [ "${scriptdir}" -ef "${wgcdir}" ]
+then
+  echo "This script is not in the default location! Proceed with caution..."
+  sleep 5
+fi
+cd ${scriptdir}
 
 # read wgc-config
 echo "Checking config file..."
