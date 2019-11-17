@@ -78,7 +78,7 @@ apt-get -q -y upgrade &>/dev/null
 
 # check for Raspberry PI
 echo "Checking if you are running on a Raspberry PI..."
-if grep -q Raspberry /proc/device-tree/model
+if grep -q Raspberry /proc/device-tree/model &>/dev/null
 then
   echo "You are running on a Raspberry PI. Downloading an additional packet..."
   apt-get -q -y install raspberry-kernel-headers &>/dev/null
@@ -87,9 +87,9 @@ else
 fi
 
 # add unstable list with low priority
-echo "deb http://deb.debian.org/debian/ unstable main" | tee --append /etc/apt/sources.list.d/unstable.list
-apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 04EE7237B7D453EC
-printf 'Package: *\nPin: release a=unstable\nPin-Priority: 150\n' | tee --append /etc/apt/preferences.d/limit-unstable
+cat "deb http://deb.debian.org/debian/ unstable main" >> /etc/apt/sources.list.d/unstable.list
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 04EE7237B7D453EC &>/dev/null
+cat 'Package: *\nPin: release a=unstable\nPin-Priority: 150\n' >> /etc/apt/preferences.d/limit-unstable
 
 # update and install wireguard
 echo "Updating packet list and installing wireguard..."
@@ -100,6 +100,7 @@ apt-get -q -y install wireguard &>/dev/null
 sed -i '/net.ipv4.ip_forward=1/s/^#//g' /etc/sysctl.conf
 
 # goto maindir and create subdirs
+echo "Creating subdirectories..."
 cd ${maindir}
 mkdir -p ${confdir}
 mkdir -p ${certdir}
@@ -139,7 +140,8 @@ if [ -f ${wgcdir}/wgc-generator.sh ]
 then
   echo "You can generate client configs with ${wgcdir}wgc-generator.sh"
 else
-  read -r -n 1 -p "WGC-Generator script not found. Start wgc-downloader.sh now? [Y/n] " response
+  echo "WGC-Generator script not found. Start wgc-downloader.sh now? [Y/n]"
+  read -r -n 1 response
   case "$response" in
     [nN])
       ;;
@@ -150,8 +152,8 @@ esac
 fi
 unset response
 
-
-read -r -n 1 -p "The server should be rebooted after the installation. Reboot now? [Y/n] " response
+echo "The server should be rebooted after the installation. Reboot now? [Y/n]"
+read -r -n 1 response
 case "$response" in
   [nN])
     echo "Please reboot manually later.";;
