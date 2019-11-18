@@ -77,4 +77,51 @@ fi
 
 # check existing client configs according to server config
 echo "Checking for configured clients in ${wginterface}.conf..."
+declare -a clients
+IFS="
+"
+for line in $(grep '^#\*#' ${maindir}${wginterface}.conf)
+do
+#  echo -n "line:"
+#  echo "${line}"
+  client=${line#\#\*\#*for }
+#  echo ${client}
+  client=${client::-4}
+#  echo "Found ${client}"
+  clients+=("${client}")
+done
 
+
+#declare -p clients
+#echo "Clients: ${clients[*]}"
+
+echo "Found ${#clients[@]} configured in ${wginterface}.conf:"
+
+#i=0
+#for client in ${clients[@]}
+#do
+#  ((i++))
+#  echo "${i} : ${client}"
+#done
+
+#nrclient=${#clients[*]}
+#for (( i=0; i<=$(( ${nrclient} -1 )); i++ ))
+#do
+#  echo "${i}: ${clients[${i}]}"
+#done
+
+echo "Select the number you want to remove:"
+select response in "${clients[*]}"
+do
+  break
+done <<< 1
+
+read -s -r remclient
+do
+  if [ "${remclient}" -le "${#clients[*]}" ]
+  then
+    break
+  fi
+done
+
+echo "Selected ${response}..."
