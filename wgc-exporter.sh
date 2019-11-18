@@ -29,15 +29,6 @@ echo "Welcome to the Wireguard Configurator Suite!"
 echo "You have opened the exporter. This tool can export all your WGC configs!"
 echo ""
 
-# set working dir as script dir
-scriptdir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
-if ! [ "${scriptdir}" -ef "${wgcdir}" ]
-then
-  echo "This script is not in the default location! Proceed with caution..."
-  sleep 5
-fi
-cd ${scriptdir}
-
 
 # read wgc-config
 echo "Checking config file..."
@@ -58,7 +49,14 @@ else
   echo "Read config file with version ${configver}."
 fi
 
-
+# set working dir as script dir
+scriptdir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+if ! [ "${scriptdir}" -ef "${wgcdir}" ]
+then
+  echo "This script is not in the default location! Proceed with caution..."
+  sleep 5
+fi
+cd ${scriptdir}
 
 
 ###############################
