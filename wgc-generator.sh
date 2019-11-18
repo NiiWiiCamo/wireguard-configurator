@@ -29,9 +29,6 @@ echo "Welcome to the Wireguard Configurator Suite!"
 echo "You have opened the generator. This tool will generate client configs ready to use!"
 echo ""
 
-# set working dir as script dir
-scriptdir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
-
 # read wgc-config
 echo "Checking config file..."
 if [ -f wgc-config ]
@@ -42,7 +39,8 @@ else
   exit 2
 fi
 
-# check for default location
+# set working dir as script dir
+scriptdir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 if ! [ "${scriptdir}" -ef "${wgcdir}" ]
 then
   echo "This script is not in the default location! Proceed with caution..."
