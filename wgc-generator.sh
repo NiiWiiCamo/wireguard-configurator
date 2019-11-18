@@ -183,10 +183,11 @@ case "$response" in
   *)
     copyconfig=true;;
 esac
-unset response
 
 # ask for confirmation
 clear
+echo "### NEW CLIENT CONFIGURATION ###"
+echo ""
 echo "Creating new client config with the following settings:"
 echo "Client name       : ${wgclientname}"
 echo "Client IP address : ${clientip}"
@@ -206,7 +207,6 @@ case ${response} in
   *)
     echo "Commencing...";;
 esac
-unset response
 
 
 # generate private and public keypair for the client
@@ -216,8 +216,19 @@ clientprivkey=$(cat ${wgclientname}-priv.key)
 echo "${clientprivkey}"
 clientpubkey=$(cat ${wgclientname}-pub.key)
 echo "${clientpubkey}"
-rm ${wgclientname}-priv.key
-rm ${wgclientname}-pub.key
+echo "Do you want to keep the generated certificates? This is only necessary if you want to recreate the config at a later date. [y/N]"
+read -s -r -n 1 result
+case $result in
+  [yY])
+    echo "Saving Keypair for ${wgclientname} to ${maindir}${certdir}...";
+    mv ${wgclientname}-priv.key ${certdir};
+    mv ${wgclientname}-pub.key ${certdir};;
+  *)
+    echo "Removing Keypair...";
+    rm ${wgclientname}-priv.key;
+    rm ${wgclientname}-pub.key;
+    echo "If you remove the client config from ${confdir}, you will not be able to restore it!";;
+esac
 
 # create client config
 cat << ENDCLIENT > ${confdir}${wgclientname}@${wgclienthostname}.conf
@@ -252,6 +263,8 @@ echo "Added client to server config ${wginterface}."
 unset clientprivkey
 unset clientpubkey
 
+echo "Finished client config is stored at ${confdir}${wgclientname}@${wgclienthostname}.conf."
+
 # check for config export
 if [ ${copyconfig} ]
 then
@@ -261,4 +274,16 @@ then
   chown -R ${SUDO_USER} ${wgcopydest}
 fi
 
-echo "Finished client config is stored at ${confdir}${wgclientname}@${wgclienthostname}.conf."
+echo ""
+echo "Generator finished. Thank you for using WireGuard Configurator!"
+echo ""
+echo "Do you want to check all currently allowed clients? [Y/n]"
+read -s -r -n 1 result
+case ${result} in
+  [nN])
+    echo "You can do that at a later date with wgc-ungenerator.sh!";;
+  *)
+    echo "Starting wgc-ungenerator.sh...";
+    source wgc-ungenerator.sh;;
+esac
+
