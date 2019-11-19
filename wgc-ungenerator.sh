@@ -74,54 +74,98 @@ else
   exit 2
 fi
 
+########## CREATE LIST OF EXISTING CLIENTS ##############
 
-# check existing client configs according to server config
+# create an array of all client names
 echo "Checking for configured clients in ${wginterface}.conf..."
 declare -a clients
 IFS="
 "
 for line in $(grep '^#\*#' ${maindir}${wginterface}.conf)
 do
-#  echo -n "line:"
-#  echo "${line}"
   client=${line#\#\*\#*for }
-#  echo ${client}
   client=${client::-4}
-#  echo "Found ${client}"
   clients+=("${client}")
 done
 
+# if no clients are configured, quit
+if [ ${#clients[@]} -eq 0 ]
+then
+  echo "No clients are configured in ${wginterface}.conf!"
+  echo "Quitting..."
+  exit
+fi
 
-#declare -p clients
-#echo "Clients: ${clients[*]}"
-
+echo ""
 echo "Found ${#clients[@]} configured in ${wginterface}.conf:"
 
-#i=0
-#for client in ${clients[@]}
-#do
-#  ((i++))
-#  echo "${i} : ${client}"
-#done
-
-#nrclient=${#clients[*]}
-#for (( i=0; i<=$(( ${nrclient} -1 )); i++ ))
-#do
-#  echo "${i}: ${clients[${i}]}"
-#done
-
-echo "Select the number you want to remove:"
-select response in "${clients[*]}"
+# print client array with user friendly naming scheme (starting at 1)
+for (( i=0; i<$(( ${#clients[*]} )); i++ ))
 do
-  break
-done <<< 1
-
-read -s -r remclient
-do
-  if [ "${remclient}" -le "${#clients[*]}" ]
-  then
-    break
-  fi
+  number=$((${i}+1))
+  echo "${number}: ${clients[${i}]}"
 done
+unset number
 
-echo "Selected ${response}..."
+# aks which client shall be removed
+
+response=0 # default input
+tries=0 # counter for invalid inputs
+maxtries=5 #abort after x fails
+while [ -z ${response} -o ${response} -le 0 -o ${response} -gt ${#clients[@]} ]
+do
+  echo ""
+  echo "Please select one of the numbers above, or press q to cancel."
+  read -s -r -n 1 response
+  # check for quit condition
+  if [ "${response}" = "q" -o "${tries}" -ge "${maxtries}" ]
+  then
+    echo "Thank you for using WireGuard Configurator!"
+    echo "Quitting..."
+    exit
+  fi
+  # add a counter for failed tries
+  tries=$((${tries}+1))
+done
+unset tries
+unset maxtries
+
+number=$((${response}-1)) # array index of actual client.
+unset response
+client=${clients[$number]}
+echo ${client}
+configs="${confdir}""${client}""@*"
+echo "Selected ${client}."
+echo "Checking for client configs..."
+
+rmconfig="true"
+if [ -f ${configs} ]
+then
+  echo "Found config for ${client}. Do you want to remove it as well? [Y/n]"
+  read -s -r -n 1 response
+  case ${response} in
+    [nN])
+      echo "Keeping client config. If you generate a new config for the same client name, this will be overwritten!";
+      rmconfig="false";;
+    *)
+      ;;
+  esac
+else
+  echo "Did not find client configs."
+fi
+
+########## LIST WHAT WILL BE DONE ############
+
+echo "###########"
+echo "This script will do the following:"
+echo " - Create a backup of your ${wginterface}.conf"
+echo " - Modify your ${wginterface}.conf to remove the textblock corresponding with ${client}."
+if [ "${rmconfig}" = "true" ]
+then
+  echo " - Remove your client config from ${confdir}."
+fi
+
+
+
+
+echo "### You have reached the current end of the file. ###"
