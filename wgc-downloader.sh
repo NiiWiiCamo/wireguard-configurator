@@ -22,7 +22,7 @@ gitbranch="indev"
 wgcdir="/etc/wireguard/wgc"
 wgcbackupdir="/etc/wireguard/wgc_backup"
 # make an array of all current files
-wgcfiles=("README.md" "wgc-config" "wgc-downloader.sh" "wgc-exporter.sh" "wgc-generator.sh" "wgc-installer.sh" "wgc-uninstaller.sh")
+wgcfiles=("README.md" "wgc-config" "wgc-downloader.sh" "wgc-exporter.sh" "wgc-generator.sh" "wgc-installer.sh" "wgc-ungenerator.sh" "wgc-uninstaller.sh")
 
 
 clear

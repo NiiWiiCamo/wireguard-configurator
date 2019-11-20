@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 ##############################
@@ -157,7 +156,8 @@ fi
 
 ########## LIST WHAT WILL BE DONE ############
 
-echo "###########"
+clear
+echo "### REMOVE CLIENT CONFIG: ${client} ###"
 echo "This script will do the following:"
 echo " - Create a backup of your ${wginterface}.conf"
 echo " - Modify your ${wginterface}.conf to remove the textblock corresponding with ${client}."

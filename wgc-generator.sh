@@ -247,7 +247,6 @@ echo "Client config generated."
 
 # append client to server config
 cat << ENDSERVER >> ${wginterface}.conf
-
 #*# Start of client config for ${wgclientname} ###
 [Peer]
 PublicKey = ${clientpubkey}
@@ -282,6 +281,6 @@ case ${result} in
     echo "You can do that at a later date with wgc-ungenerator.sh!";;
   *)
     echo "Starting wgc-ungenerator.sh...";
-    source wgc-ungenerator.sh;;
+    source ${wgcdir}wgc-ungenerator.sh;;
 esac
 
