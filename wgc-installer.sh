@@ -9,7 +9,7 @@
 # installer
 
 # set expected config version
-installerver=2
+installerver=3
 
 # root check
 if ! [ $(id -u) -eq 0 ]
@@ -53,7 +53,7 @@ scriptdir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 if ! [ "${scriptdir}" -ef "${wgcdir}" ]
 then
   echo "This script is not in the default location! Proceed with caution..."
-  sleep 5
+  sleep ${sleeptimer}
 fi
 cd ${scriptdir}
 

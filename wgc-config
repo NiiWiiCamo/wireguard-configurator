@@ -9,15 +9,19 @@
 # config file
 
 # config version, gets checked by scripts. DO NOT CHANGE!
-configver=2
+configver=3
 
 # main directory, defaults to /etc/wireguard/
 maindir=
 maindir=${maindir:-/etc/wireguard/}
 
-# wgc dirrectory, defaults to ./wgc/
+# wgc directory, defaults to ./wgc/
 wgcdir=
 wgcdir=${wgcdir:-${maindir}wgc/}
+
+# sleeptimer, how long to pause for softerror, defaults to 3
+sleeptimer=
+sleeptimer=${sleeptimer:-3}
 
 # cert subdirectory, defaults to ./certificates/
 certdir=

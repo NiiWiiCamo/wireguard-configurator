@@ -1,3 +1,4 @@
+
 #!/bin/bash
 
 ##############################
@@ -9,7 +10,7 @@
 # ungenerator
 
 # set expected config version
-ungeneratorver=2
+ungeneratorver=3
 
 # root check
 if ! [ $(id -u) -eq 0 ]
@@ -46,7 +47,7 @@ fi
 if ! [ "${scriptdir}" -ef "${wgcdir}" ]
 then
   echo "This script is not in the default location! Proceed with caution..."
-  #sleep 5
+  sleep ${sleeptimer}
 fi
 cd ${scriptdir}
 
@@ -138,7 +139,7 @@ configs=${confdir}${client}@${wgclienthostname}.conf
 echo "Selected ${client}."
 echo "Checking for client configs..."
 
-rmconfig="true"
+rmconfig="false"
 if [ -f ${configs} ]
 then
   echo "Found config for ${client}. Do you want to remove it as well? [Y/n]"
@@ -148,7 +149,7 @@ then
       echo "Keeping client config. If you generate a new config for the same client name, this will be overwritten!";
       rmconfig="false";;
     *)
-      ;;
+      rmconfig="true";;
   esac
 else
   echo "Did not find client configs."
