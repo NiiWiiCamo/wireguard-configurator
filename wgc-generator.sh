@@ -213,9 +213,7 @@ esac
 echo "Generating Keypair for the client..."
 wg genkey | tee ${wgclientname}-priv.key | wg pubkey > ${wgclientname}-pub.key
 clientprivkey=$(cat ${wgclientname}-priv.key)
-echo "${clientprivkey}"
 clientpubkey=$(cat ${wgclientname}-pub.key)
-echo "${clientpubkey}"
 echo "Do you want to keep the generated certificates? This is only necessary if you want to recreate the config at a later date. [y/N]"
 read -s -r -n 1 result
 case $result in
