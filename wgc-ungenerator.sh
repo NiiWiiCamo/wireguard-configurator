@@ -1,4 +1,4 @@
-##!/bin/bash
+#!/bin/bash
 
 ##############################
 #                            #
@@ -81,9 +81,11 @@ echo "Checking for configured clients in ${wginterface}.conf..."
 declare -a clients
 IFS="
 "
-for line in $(grep '^# Start' ${maindir}${wginterface}.conf)
+for line in $(grep '^#\*#' ${maindir}${wginterface}.conf)
 do
-  client=${line#\#\ Start-*}
+#  client=${line#\#\ Start-*}
+  client=${line#\#\*\#*for }
+  client=${client::-4}
   clients+=("${client}")
 done
 
@@ -132,7 +134,7 @@ unset maxtries
 number=$((${response}-1)) # array index of actual client.
 unset response
 client=${clients[$number]}
-configs="${confdir}""${client}""@*"
+configs=${confdir}${client}@${wgclienthostname}.conf
 echo "Selected ${client}."
 echo "Checking for client configs..."
 
@@ -173,12 +175,8 @@ case ${response} in
     echo "Ungenerating ${client}...";
     echo "Creating backup of ${wginterface}.conf...";
     cp ${maindir}${wginterface}.conf ${maindir}${wginterface}.conf.backup;
-    firstline="\#\ Start-${client}";
-    lastline="\#\ End-${client}";
-    #echo $firstline
-    #echo $lastline
     echo "Ungenerating ${client} from ${wginterface}.conf...";
-    sed '/# Start-${client}/d' ${maindir}${wginterface}.conf;
+    sed -i "/Start of client config for ${client}/,/End of client config for ${client}/d" ${maindir}${wginterface}.conf;
     if [ "${rmconfig}" = "true" ]
     then
       echo "Removing config file..."
