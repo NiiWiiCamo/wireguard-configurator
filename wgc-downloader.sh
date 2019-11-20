@@ -17,7 +17,7 @@ fi
 
 # set git base URL, needs branch added
 giturl="https://raw.githubusercontent.com/NiiWiiCamo/wireguard-configurator/"
-gitbranch="indev"
+gitbranch="master"
 # set default paths
 wgcdir="/etc/wireguard/wgc"
 wgcbackupdir="/etc/wireguard/wgc_backup"

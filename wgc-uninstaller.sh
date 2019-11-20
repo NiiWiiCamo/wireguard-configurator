@@ -29,6 +29,8 @@ echo "Welcome to the Wireguard Configurator Suite!"
 echo "You have opened the uninstaller. This tool allows you to uninstall WGC and Wireguard!"
 echo ""
 
+# set working dir as script dir
+scriptdir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 
 # read wgc-config
 echo "Checking config file..."
@@ -52,8 +54,6 @@ else
   read -s -r -p "Could not find wgc-conf! Where are your configs? Default should be /etc/wireguard/ ." uninstalldir
 fi
 
-# set working dir as script dir
-scriptdir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 if ! [ "${scriptdir}" -ef "${wgcdir}" ]
 then
   echo "This script is not in the default location! Proceed with caution..."
