@@ -149,7 +149,7 @@ echo "Exported files:" >> wgcexport.txt
 tar cf ${exportdir}wgcexport.tar wgcexport.txt
 for f in ${toexport[@]} in
 do
-  echo ${f} >> wgcexport.txt
+#  echo ${f} >> wgcexport.txt
   tar rf ${exportdir}wgcexport.tar ${f}
 done
 echo "Tarball finished. You can find it at ${exportdir}wgcexport.tar"

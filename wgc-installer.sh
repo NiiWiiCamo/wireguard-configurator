@@ -165,7 +165,7 @@ else
     [nN])
       ;;
     *)
-      source ${wgcdir}/wgc-downloader.sh
+      source ${wgcdir}wgc-downloader.sh
       ;;
 esac
 fi
