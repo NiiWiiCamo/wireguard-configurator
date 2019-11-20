@@ -46,7 +46,7 @@ fi
 if ! [ "${scriptdir}" -ef "${wgcdir}" ]
 then
   echo "This script is not in the default location! Proceed with caution..."
-  sleep 5
+  #sleep 5
 fi
 cd ${scriptdir}
 
