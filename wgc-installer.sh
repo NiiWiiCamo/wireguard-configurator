@@ -31,6 +31,7 @@ echo ""
 
 # set working dir as script dir
 scriptdir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+cd ${scriptdir}
 
 # read wgc-config
 echo "Checking config file..."
