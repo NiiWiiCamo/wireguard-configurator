@@ -1,4 +1,4 @@
-#!/bin/bash
+##!/bin/bash
 
 ##############################
 #                            #
@@ -81,10 +81,9 @@ echo "Checking for configured clients in ${wginterface}.conf..."
 declare -a clients
 IFS="
 "
-for line in $(grep '^#\*#' ${maindir}${wginterface}.conf)
+for line in $(grep '^# Start' ${maindir}${wginterface}.conf)
 do
-  client=${line#\#\*\#*for }
-  client=${client::-4}
+  client=${line#\#\ Start-*}
   clients+=("${client}")
 done
 
@@ -133,7 +132,6 @@ unset maxtries
 number=$((${response}-1)) # array index of actual client.
 unset response
 client=${clients[$number]}
-echo ${client}
 configs="${confdir}""${client}""@*"
 echo "Selected ${client}."
 echo "Checking for client configs..."
@@ -165,7 +163,34 @@ then
   echo " - Remove your client config from ${confdir}."
 fi
 
+########## ASK FOR CONFIRMATION ############
 
-
-
+echo ""
+echo "Are you sure you want to commence with the actions listed above? [y/N]"
+read -s -r -n 1 response
+case ${response} in
+  [yY])
+    echo "Ungenerating ${client}...";
+    echo "Creating backup of ${wginterface}.conf...";
+    cp ${maindir}${wginterface}.conf ${maindir}${wginterface}.conf.backup;
+    firstline="\#\ Start-${client}";
+    lastline="\#\ End-${client}";
+    #echo $firstline
+    #echo $lastline
+    echo "Ungenerating ${client} from ${wginterface}.conf...";
+    sed '/# Start-${client}/d' ${maindir}${wginterface}.conf;
+    if [ "${rmconfig}" = "true" ]
+    then
+      echo "Removing config file..."
+      rm ${configs}
+    fi;
+    echo "";
+    echo "Ungeneration finished. Thank you for using WireGuard Configurator!";
+    ;;
+  *)
+    echo "Aborting Ungenerator. Thank you for using WireGuard Configurator!";
+    ;;
+esac
+echo "Quitting..."
+exit
 echo "### You have reached the current end of the file. ###"
