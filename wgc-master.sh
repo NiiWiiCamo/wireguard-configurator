@@ -180,5 +180,3 @@ case ${response} in
     echo "Starting WGC Updater...";
     ${wgcdir}wgc-updater.sh;;
 esac
-
-echo "If you can read this, something went wrong!"

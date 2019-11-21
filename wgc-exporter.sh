@@ -173,4 +173,3 @@ rm wgcexport.txt
 echo "Export finished. Exiting..."
 exit
 
-echo "If you can read this, something went wrong!"

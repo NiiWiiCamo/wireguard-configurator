@@ -193,5 +193,3 @@ case "$response" in
     ${wgcdir}wgc-master.sh;;
 esac
 unset response
-
-echo "If you can read this, something went wrong!"

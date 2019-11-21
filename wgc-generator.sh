@@ -284,5 +284,3 @@ case ${result} in
     ${wgcdir}wgc-master.sh;
     ;;
 esac
-
-echo "If you can read this, something went wrong!"

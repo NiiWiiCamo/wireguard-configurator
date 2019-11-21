@@ -77,13 +77,17 @@ fi
 ########## CLEANING ASK ############
 # ask for level or cleaning
 configexport=false
-echo ""
-echo "What do you want to remove?"
-echo "[o]nly wgc scripts and configs, I want to keep wireguard installed."
-echo "[w]ireguard and all configs and scripts. Please reset my system to what it was before."
-echo "[e]xport all server and client configs. Don't remove anything."
-echo "[N]othing. I want to keep everything."
-read -s -r -n 1 response
+response=0
+while [[ ${response} != [oOwWeEnN] ]]
+do
+  echo ""
+  echo "What do you want to remove?"
+  echo "[o]nly wgc scripts and configs, I want to keep wireguard installed."
+  echo "[w]ireguard and all configs and scripts. Please reset my system to what it was before."
+  echo "[e]xport all server and client configs. Don't remove anything."
+  echo "[N]othing. I want to keep everything."
+  read -s -r -n 1 response
+done
 case ${response} in
   [oO])
     uninstall=o;;
@@ -217,5 +221,3 @@ case ${response} in
 esac
 echo "Uninstaller finished. Thank you for using WireGuard Configurator!"
 exit
-
-echo "If you can read this, something went wrong!"
