@@ -171,13 +171,27 @@ esac
 fi
 unset response
 
-echo "The server should be rebooted after the installation. Reboot now? [Y/n]"
+echo "The server should be rebooted after the installation. Reboot now? [y/N]"
+read -s -r -n 1 response
+case "$response" in
+  [yY])
+    echo "Rebooting now...";
+    reboot now;;
+  *)
+    echo "Please reboot manually later.";;
+esac
+unset response
+
+
+echo "Do you want to start WGC Master? [Y/n]"
 read -s -r -n 1 response
 case "$response" in
   [nN])
-    echo "Please reboot manually later.";;
+    echo "Thank you for using WireGuard Configurator!";
+    exit;;
   *)
-    echo "Rebooting now...";
-    reboot now;;
+    ${wgcdir}wgc-master.sh;;
 esac
 unset response
+
+echo "If you can read this, something went wrong!"

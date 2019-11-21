@@ -113,7 +113,7 @@ unset response
 if [ ${configexport} = true ]
 then
   echo "Starting wgc-exporter.sh..."
-  source wgc-exporter.sh
+  ${wgcdir}wgc-exporter.sh
 fi
 
 
@@ -216,3 +216,6 @@ case ${response} in
     exit;;
 esac
 echo "Uninstaller finished. Thank you for using WireGuard Configurator!"
+exit
+
+echo "If you can read this, something went wrong!"

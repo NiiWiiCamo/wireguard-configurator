@@ -274,13 +274,15 @@ fi
 echo ""
 echo "Generator finished. Thank you for using WireGuard Configurator!"
 echo ""
-echo "Do you want to check all currently allowed clients? [Y/n]"
+echo "Do you want to start WGC Master? [Y/n]"
 read -s -r -n 1 result
 case ${result} in
   [nN])
-    echo "You can do that at a later date with wgc-ungenerator.sh!";;
+    echo "Thank you for using WireGuard Configurator!";
+    exit;;
   *)
-    echo "Starting wgc-ungenerator.sh...";
-    source ${wgcdir}wgc-ungenerator.sh;;
+    ${wgcdir}wgc-master.sh;
+    ;;
 esac
 
+echo "If you can read this, something went wrong!"

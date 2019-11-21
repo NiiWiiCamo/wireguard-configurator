@@ -98,12 +98,23 @@ else
   read -s -r -n 1 response
   case ${response} in
     [nN])
-      echo "You can use wgc-installer.sh or wgc-master.sh (TBD) to manually start the installation.";;
+      echo "You can use wgc-installer.sh or wgc-master.sh to manually start the installation.";;
     *)
       echo "Starting wgc-installer.sh...";
-      source wgc-installer.sh;;
+      ${wgcdir}wgc-installer.sh;;
   esac
   unset response
 fi
 echo ""
-echo "Thank you for using WGC - WireGuard Configurator!"
+echo "Start WGC-Master now? [Y/n]"
+read -s -r -n 1 response
+case ${response} in
+  [nN])
+    echo "Thank you for using WGC - WireGuard Configurator!";
+    exit;;
+  *)
+    ${wgcdir}wgc-master.sh;
+    ;;
+esac
+
+echo "If you can read this, something went wrong!"
