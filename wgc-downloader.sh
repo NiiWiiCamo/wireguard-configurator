@@ -101,7 +101,7 @@ else
       echo "You can use wgc-installer.sh or wgc-master.sh to manually start the installation.";;
     *)
       echo "Starting wgc-installer.sh...";
-      ${wgcdir}wgc-installer.sh;;
+      ${wgcdir}/wgc-installer.sh;;
   esac
   unset response
 fi
@@ -113,7 +113,7 @@ case ${response} in
     echo "Thank you for using WGC - WireGuard Configurator!";
     exit;;
   *)
-    ${wgcdir}wgc-master.sh;
+    ${wgcdir}/wgc-master.sh;
     ;;
 esac
 
