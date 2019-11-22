@@ -166,17 +166,22 @@ unset maxtries
 case ${response} in
   1)
     echo "Starting WGC Generator...";
-    ${wgcdir}wgc-generator.sh;;
+    ${wgcdir}wgc-generator.sh;
+    exit;;
   2)
     echo "Starting WGC Ungenerator...";
-    ${wgcdir}wgc-ungenerator.sh;;
+    ${wgcdir}wgc-ungenerator.sh;
+    exit;;
   3)
     echo "Starting WGC Uninstaller...";
-    ${wgcdir}wgc-uninstaller.sh;;
+    ${wgcdir}wgc-uninstaller.sh;
+    exit;;
   4)
     echo "Starting WGC Exporter...";
-    ${wgcdir}wgc-exporter.sh;;
+    ${wgcdir}wgc-exporter.sh;
+    exit;;
   5)
     echo "Starting WGC Updater...";
-    ${wgcdir}wgc-updater.sh;;
+    ${wgcdir}wgc-updater.sh;
+    exit;;
 esac

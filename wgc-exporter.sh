@@ -183,6 +183,6 @@ case ${result} in
     exit;;
   *)
     ${wgcdir}wgc-master.sh;
-    ;;
+    exit;;
 esac
 

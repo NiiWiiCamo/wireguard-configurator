@@ -228,7 +228,7 @@ case ${response} in
         exit;;
        *)
         ${wgcdir}wgc-master.sh;
-        ;;
+        exit;;
     esac
     exit;;
 esac

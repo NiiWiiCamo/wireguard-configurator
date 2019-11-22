@@ -190,6 +190,7 @@ case "$response" in
     echo "Thank you for using WireGuard Configurator!";
     exit;;
   *)
-    ${wgcdir}wgc-master.sh;;
+    ${wgcdir}wgc-master.sh;
+    exit;;
 esac
 unset response
