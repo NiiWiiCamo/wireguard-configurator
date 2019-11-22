@@ -192,12 +192,17 @@ case ${response} in
     ;;
 esac
 
+echo ""
+echo "######"
+echo "Ungenerator finished. Thank you for using WireGuard Configurator!"
+echo ""
 echo "Do you want to start WGC Master? [Y/n]"
-read -s -r -n 1 response
-case ${response} in
+read -s -r -n 1 result
+case ${result} in
   [nN])
     echo "Thank you for using WireGuard Configurator!";
     exit;;
   *)
-    ${wgcdir}wgc-master.sh;;
+    ${wgcdir}wgc-master.sh;
+    ;;
 esac

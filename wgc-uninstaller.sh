@@ -217,6 +217,19 @@ case ${response} in
   *)
     echo "";
     echo "Nothing was removed.";
+    echo ""
+    echo "Thank you for using WireGuard Configurator!"
+    echo ""
+    echo "Do you want to start WGC Master? [Y/n]"
+    read -s -r -n 1 result
+    case ${result} in
+      [nN])
+        echo "Thank you for using WireGuard Configurator!";
+        exit;;
+       *)
+        ${wgcdir}wgc-master.sh;
+        ;;
+    esac
     exit;;
 esac
 echo "Uninstaller finished. Thank you for using WireGuard Configurator!"
