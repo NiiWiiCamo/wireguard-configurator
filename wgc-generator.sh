@@ -233,7 +233,7 @@ cat << ENDCLIENT > ${confdir}${wgclientname}@${wgclienthostname}.conf
 # Wireguard client config created with wgc-generator script version ${generatorver}
 [Interface]
 PrivateKey = ${clientprivkey}
-Address = ${clientip}/24
+Address = ${clientip}/32
 DNS = ${wgclientdns}
 
 [Peer]
