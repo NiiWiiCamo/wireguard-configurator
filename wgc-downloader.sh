@@ -45,7 +45,7 @@ then
   if [ -d ${wgcbackupdir} ]
   then
     echo "Previous backup found. Overwrite? [Y/n]"
-    read -r -n 1 result
+    read -s -r -n 1 result
     case ${result} in
       [nN])
         echo "Please move your backup manually and restart this script.";

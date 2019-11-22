@@ -97,12 +97,9 @@ done
 # check client configs
 echo "Checking for client configs in ${confdir}..."
 counter=0
-for file in ${confdir}*
+for file in ${confdir}*.conf
 do
-  if [ ${file} = *.conf ]
-  then
-    counter++
-  fi
+  ((counter++))
 done
 echo "Found ${counter} configs in ${confdir}. Export? [Y/n]?"
 read -s -r -n 1 response
@@ -147,11 +144,15 @@ echo "Creating tarball..."
 echo "Wireguard Config Export created by wgc-export.sh on $(date)." > wgcexport.txt
 echo "Exported files:" >> wgcexport.txt
 tar cf ${exportdir}wgcexport.tar wgcexport.txt
-for f in ${toexport[@]} in
-do
+echo ${toexport[*]}
+if [ ${#toexport[@]} = 0 ]
+then
+  for f in ${toexport[@]} in
+  do
 #  echo ${f} >> wgcexport.txt
-  tar rf ${exportdir}wgcexport.tar ${f}
-done
+    tar uf ${exportdir}wgcexport.tar ${f}
+  done
+fi
 echo "Tarball finished. You can find it at ${exportdir}wgcexport.tar"
 
 # ask for filetree export
