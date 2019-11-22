@@ -31,6 +31,7 @@ echo ""
 
 # set working dir as script dir
 scriptdir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+cd ${scriptdir}
 
 # read wgc-config
 echo "Checking config file..."
@@ -184,12 +185,24 @@ case ${response} in
       rm ${configs}
     fi;
     echo "";
-    echo "Ungeneration finished. Thank you for using WireGuard Configurator!";
+    echo "Ungeneration finished.";
     ;;
   *)
-    echo "Aborting Ungenerator. Thank you for using WireGuard Configurator!";
+    echo "Aborting Ungenerator.";
     ;;
 esac
-echo "Quitting..."
-exit
-echo "### You have reached the current end of the file. ###"
+
+echo ""
+echo "######"
+echo "Ungenerator finished. Thank you for using WireGuard Configurator!"
+echo ""
+echo "Do you want to start WGC Master? [Y/n]"
+read -s -r -n 1 result
+case ${result} in
+  [nN])
+    echo "Thank you for using WireGuard Configurator!";
+    exit;;
+  *)
+    ${wgcdir}wgc-master.sh;
+    exit;;
+esac

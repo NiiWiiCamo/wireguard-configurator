@@ -22,7 +22,7 @@ gitbranch="master"
 wgcdir="/etc/wireguard/wgc"
 wgcbackupdir="/etc/wireguard/wgc_backup"
 # make an array of all current files
-wgcfiles=("README.md" "wgc-config" "wgc-downloader.sh" "wgc-exporter.sh" "wgc-generator.sh" "wgc-installer.sh" "wgc-ungenerator.sh" "wgc-uninstaller.sh")
+wgcfiles=("README.md" "wgc-config" "wgc-downloader.sh" "wgc-exporter.sh" "wgc-generator.sh" "wgc-installer.sh" "wgc-master.sh" "wgc-ungenerator.sh" "wgc-uninstaller.sh")
 
 
 clear
@@ -45,7 +45,7 @@ then
   if [ -d ${wgcbackupdir} ]
   then
     echo "Previous backup found. Overwrite? [Y/n]"
-    read -r -n 1 result
+    read -s -r -n 1 result
     case ${result} in
       [nN])
         echo "Please move your backup manually and restart this script.";
@@ -90,7 +90,7 @@ echo "Finished downloading. You can now use wgc-master.sh (TBD) or any of the ot
 
 # check if wireguard is installed already
 echo ""
-if apt -qq list wireguard 2>/dev/null | grep wireguard ;
+if apt -qq list wireguard 2>/dev/null | grep -q wireguard ;
 then
   echo "Wireguard is already installed. If you are looking to reinstall, please use wgc-uninstaller.sh!"
 else
@@ -98,13 +98,21 @@ else
   read -s -r -n 1 response
   case ${response} in
     [nN])
-      echo "You can use wgc-installer.sh or wgc-master.sh (TBD) to manually start the installation.";;
+      echo "You can use wgc-installer.sh or wgc-master.sh to manually start the installation.";;
     *)
       echo "Starting wgc-installer.sh...";
-      source wgc-installer.sh;;
+      ${wgcdir}/wgc-installer.sh;;
   esac
   unset response
 fi
 echo ""
-echo "Thank you for using WGC - WireGuard Configurator!"
-
+echo "Start WGC-Master now? [Y/n]"
+read -s -r -n 1 response
+case ${response} in
+  [nN])
+    echo "Thank you for using WGC - WireGuard Configurator!";
+    exit;;
+  *)
+    ${wgcdir}/wgc-master.sh;
+    exit;;
+esac

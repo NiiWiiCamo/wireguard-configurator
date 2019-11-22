@@ -29,6 +29,9 @@ echo "Welcome to the Wireguard Configurator Suite!"
 echo "You have opened the uninstaller. This tool allows you to uninstall WGC and Wireguard!"
 echo ""
 
+# set working dir as script dir
+scriptdir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+cd ${scriptdir}
 
 # read wgc-config
 echo "Checking config file..."
@@ -52,8 +55,6 @@ else
   read -s -r -p "Could not find wgc-conf! Where are your configs? Default should be /etc/wireguard/ ." uninstalldir
 fi
 
-# set working dir as script dir
-scriptdir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 if ! [ "${scriptdir}" -ef "${wgcdir}" ]
 then
   echo "This script is not in the default location! Proceed with caution..."
@@ -76,13 +77,17 @@ fi
 ########## CLEANING ASK ############
 # ask for level or cleaning
 configexport=false
-echo ""
-echo "What do you want to remove?"
-echo "[o]nly wgc scripts and configs, I want to keep wireguard installed."
-echo "[w]ireguard and all configs and scripts. Please reset my system to what it was before."
-echo "[e]xport all server and client configs. Don't remove anything."
-echo "[N]othing. I want to keep everything."
-read -s -r -n 1 response
+response=0
+while [[ ${response} != [oOwWeEnN] ]]
+do
+  echo ""
+  echo "What do you want to remove?"
+  echo "[o]nly wgc scripts and configs, I want to keep wireguard installed."
+  echo "[w]ireguard and all configs and scripts. Please reset my system to what it was before."
+  echo "[e]xport all server and client configs. Don't remove anything."
+  echo "[N]othing. I want to keep everything."
+  read -s -r -n 1 response
+done
 case ${response} in
   [oO])
     uninstall=o;;
@@ -112,7 +117,7 @@ unset response
 if [ ${configexport} = true ]
 then
   echo "Starting wgc-exporter.sh..."
-  source wgc-exporter.sh
+  ${wgcdir}wgc-exporter.sh
 fi
 
 
@@ -212,6 +217,20 @@ case ${response} in
   *)
     echo "";
     echo "Nothing was removed.";
+    echo ""
+    echo "Thank you for using WireGuard Configurator!"
+    echo ""
+    echo "Do you want to start WGC Master? [Y/n]"
+    read -s -r -n 1 result
+    case ${result} in
+      [nN])
+        echo "Thank you for using WireGuard Configurator!";
+        exit;;
+       *)
+        ${wgcdir}wgc-master.sh;
+        exit;;
+    esac
     exit;;
 esac
 echo "Uninstaller finished. Thank you for using WireGuard Configurator!"
+exit

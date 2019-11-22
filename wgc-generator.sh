@@ -29,6 +29,10 @@ echo "Welcome to the Wireguard Configurator Suite!"
 echo "You have opened the generator. This tool will generate client configs ready to use!"
 echo ""
 
+# set working dir as script dir
+scriptdir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+cd ${scriptdir}
+
 # read wgc-config
 echo "Checking config file..."
 if [ -f wgc-config ]
@@ -39,8 +43,6 @@ else
   exit 2
 fi
 
-# set working dir as script dir
-scriptdir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 if ! [ "${scriptdir}" -ef "${wgcdir}" ]
 then
   echo "This script is not in the default location! Proceed with caution..."
@@ -211,9 +213,7 @@ esac
 echo "Generating Keypair for the client..."
 wg genkey | tee ${wgclientname}-priv.key | wg pubkey > ${wgclientname}-pub.key
 clientprivkey=$(cat ${wgclientname}-priv.key)
-echo "${clientprivkey}"
 clientpubkey=$(cat ${wgclientname}-pub.key)
-echo "${clientpubkey}"
 echo "Do you want to keep the generated certificates? This is only necessary if you want to recreate the config at a later date. [y/N]"
 read -s -r -n 1 result
 case $result in
@@ -274,13 +274,13 @@ fi
 echo ""
 echo "Generator finished. Thank you for using WireGuard Configurator!"
 echo ""
-echo "Do you want to check all currently allowed clients? [Y/n]"
+echo "Do you want to start WGC Master? [Y/n]"
 read -s -r -n 1 result
 case ${result} in
   [nN])
-    echo "You can do that at a later date with wgc-ungenerator.sh!";;
+    echo "Thank you for using WireGuard Configurator!";
+    exit;;
   *)
-    echo "Starting wgc-ungenerator.sh...";
-    source ${wgcdir}wgc-ungenerator.sh;;
+    ${wgcdir}wgc-master.sh;
+    exit;;
 esac
-

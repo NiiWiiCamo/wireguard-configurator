@@ -29,6 +29,10 @@ echo "Welcome to the Wireguard Configurator Suite!"
 echo "You have opened the installer. This tool will install wireguard and setup your system!"
 echo ""
 
+# set working dir as script dir
+scriptdir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+cd ${scriptdir}
+
 # read wgc-config
 echo "Checking config file..."
 if [ -f wgc-config ]
@@ -48,8 +52,6 @@ else
   echo "Read config file with version ${configver}."
 fi
 
-# set working dir as script dir
-scriptdir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 if ! [ "${scriptdir}" -ef "${wgcdir}" ]
 then
   echo "This script is not in the default location! Proceed with caution..."
@@ -163,19 +165,32 @@ else
     [nN])
       ;;
     *)
-      source ${wgcdir}/wgc-downloader.sh
+      source ${wgcdir}wgc-downloader.sh
       ;;
 esac
 fi
 unset response
 
-echo "The server should be rebooted after the installation. Reboot now? [Y/n]"
+echo "The server should be rebooted after the installation. Reboot now? [y/N]"
+read -s -r -n 1 response
+case "$response" in
+  [yY])
+    echo "Rebooting now...";
+    reboot now;;
+  *)
+    echo "Please reboot manually later.";;
+esac
+unset response
+
+
+echo "Do you want to start WGC Master? [Y/n]"
 read -s -r -n 1 response
 case "$response" in
   [nN])
-    echo "Please reboot manually later.";;
+    echo "Thank you for using WireGuard Configurator!";
+    exit;;
   *)
-    echo "Rebooting now...";
-    reboot now;;
+    ${wgcdir}wgc-master.sh;
+    exit;;
 esac
 unset response

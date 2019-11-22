@@ -30,6 +30,10 @@ echo "You have opened the exporter. This tool can export all your WGC configs!"
 echo ""
 
 
+# set working dir as script dir
+scriptdir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+cd ${scriptdir}
+
 # read wgc-config
 echo "Checking config file..."
 if [ -f wgc-config ]
@@ -49,8 +53,6 @@ else
   echo "Read config file with version ${configver}."
 fi
 
-# set working dir as script dir
-scriptdir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 if ! [ "${scriptdir}" -ef "${wgcdir}" ]
 then
   echo "This script is not in the default location! Proceed with caution..."
@@ -95,12 +97,9 @@ done
 # check client configs
 echo "Checking for client configs in ${confdir}..."
 counter=0
-for file in ${confdir}*
+for file in ${confdir}*.conf
 do
-  if [ ${file} = *.conf ]
-  then
-    counter++
-  fi
+  ((counter++))
 done
 echo "Found ${counter} configs in ${confdir}. Export? [Y/n]?"
 read -s -r -n 1 response
@@ -145,11 +144,15 @@ echo "Creating tarball..."
 echo "Wireguard Config Export created by wgc-export.sh on $(date)." > wgcexport.txt
 echo "Exported files:" >> wgcexport.txt
 tar cf ${exportdir}wgcexport.tar wgcexport.txt
-for f in ${toexport[@]} in
-do
-  echo ${f} >> wgcexport.txt
-  tar rf ${exportdir}wgcexport.tar ${f}
-done
+echo ${toexport[*]}
+if [ ${#toexport[@]} = 0 ]
+then
+  for f in ${toexport[@]} in
+  do
+#  echo ${f} >> wgcexport.txt
+    tar uf ${exportdir}wgcexport.tar ${f}
+  done
+fi
 echo "Tarball finished. You can find it at ${exportdir}wgcexport.tar"
 
 # ask for filetree export
@@ -168,4 +171,18 @@ case ${response} in
 esac
 chown -R ${SUDO_USER} ${exportdir}
 rm wgcexport.txt
-echo "Export finished. Exiting..."
+echo ""
+echo "######"
+echo "Exporter finished. Thank you for using WireGuard Configurator!"
+echo ""
+echo "Do you want to start WGC Master? [Y/n]"
+read -s -r -n 1 result
+case ${result} in
+  [nN])
+    echo "Thank you for using WireGuard Configurator!";
+    exit;;
+  *)
+    ${wgcdir}wgc-master.sh;
+    exit;;
+esac
+
