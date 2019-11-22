@@ -136,9 +136,10 @@ tries=0 # counter for invalid inputs
 maxtries=5 #abort after x fails
 while [[ ${response} != [q12345] ]]
 do
+  echo ""
   clear
   echo "### WireGuard Configurator ###"
-  echo "There are ${#clients[@]} currently configured in ${wginterface}.conf."
+  echo "There are ${#clients[@]} clients currently configured in ${wginterface}.conf."
   echo ""
   echo "You can do the following:"
   echo "1) Generate a new client config"
