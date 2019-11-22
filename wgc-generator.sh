@@ -267,7 +267,7 @@ if [ ${copyconfig} ]
 then
   echo "Copying finished client config to ${wgcopydest}..."
   mkdir -p ${wgcopydest}
-  cp ${confdir}${wgclientname}@${wgclienthostname}.conf ${wgcopydest}
+  cp ${confdir}${wgclientname}@${wgclienthostname}.conf ${wgcopydest}${wgclientname}.conf
   chown -R ${SUDO_USER} ${wgcopydest}
 fi
 
