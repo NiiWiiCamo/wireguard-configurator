@@ -131,12 +131,12 @@ fi
 
 ###### ASK WHAT SHOULD BE DONE
 
-clear
 response=0 # default input
 tries=0 # counter for invalid inputs
 maxtries=5 #abort after x fails
 while [[ ${response} != [q12345] ]]
 do
+  clear
   echo "### WireGuard Configurator ###"
   echo "There are ${#clients[@]} currently configured in ${wginterface}.conf."
   echo ""
