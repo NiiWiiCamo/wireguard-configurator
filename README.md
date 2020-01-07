@@ -8,6 +8,10 @@ Because of the nature of the scripts, everything needs to be run as root (sudo).
 
 I am developing these scripts currently for Raspbian/Debian 10 (Buster). Might implement support for others later, although unlikely.
 
+One-liner to download WireGuard Configurator (needs wget):
+
+wget -N https://raw.githubusercontent.com/NiiWiiCamo/wireguard-configurator/indev/wgc-downloader.sh
+
 Thanks @jkoan for the constant support and help!
 If you find any mistakes/bad scripting, tell me where and what. I am a Bash n00b just trying to make life a little bit easier for people like me.
 
