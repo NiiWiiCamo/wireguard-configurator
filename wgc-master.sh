@@ -134,7 +134,7 @@ fi
 response=0 # default input
 tries=0 # counter for invalid inputs
 maxtries=5 #abort after x fails
-while [[ ${response} != [q12345] ]]
+while [[ ${response} != [q123456] ]]
 do
   echo ""
   clear
