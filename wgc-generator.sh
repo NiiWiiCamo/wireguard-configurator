@@ -274,6 +274,8 @@ fi
 echo ""
 echo "Generator finished. Thank you for using WireGuard Configurator!"
 echo ""
+echo "Please restart WireGuard daemon when you are finished."
+echo ""
 echo "Do you want to start WGC Master? [Y/n]"
 read -s -r -n 1 result
 case ${result} in

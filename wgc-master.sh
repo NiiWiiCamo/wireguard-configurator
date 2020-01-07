@@ -147,6 +147,7 @@ do
   echo "3) Uninstall WGC or WGC and WireGuard"
   echo "4) Export existing configs"
   echo "5) Update WGC and WireGuard"
+  echo "6) Restart Wireguard"
   echo "q) Quit"
   echo ""
   echo "Please select one of the numbers above, or press q to cancel."
@@ -184,5 +185,11 @@ case ${response} in
   5)
     echo "Starting WGC Updater...";
     ${wgcdir}wgc-updater.sh;
+    exit;;
+  6)
+    echo "Restarting Wireguard...";
+    wg-quick down ${wginterface};
+    wg-quick up ${wginterface};
+    wg;
     exit;;
 esac
