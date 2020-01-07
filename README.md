@@ -24,11 +24,10 @@ Current status:
   - Undoes everything wgc-installer does. Asks for export, calls wgc-exporter.
 - wgc-exporter:
   - Exports your created config files to a tarball and optionally as filetree.
-
-- (TBD) wgc-ungenerator:
+- wgc-ungenerator:
   - Undoes everything wgc-generator does and removes specific client configs.
-- (TBD) wgc-importer:
-  - Imports existing configs, will be called by wgc-installer.
-- (TBD) wgc-master:
+- wgc-master:
   - Master of puppets, master suite to call all other scripts. For convenience only.
   - Basically going to be you one-stop shop for everything.
+- (TBD) wgc-importer:
+  - Imports existing configs, will be called by wgc-installer.
