@@ -7,7 +7,7 @@ from pathlib import Path
 
 operatingsystem: str = "Windows"
 distribution: str = 'unknown'
-wireguardpath: str = "./wireguard-test/wireguard"
+wireguardpath: str = "./wireguard-test/wireguard/"
 selectedinterface: str = "wg0"
 
 
@@ -100,7 +100,7 @@ def printlistmenu(lis: list):
         print(str(i) + ": " + str(lis[i]))
 
 
-def makemenu(title: str, labels: list, commands: list, maxtries: int = 3, auxstr1: str = ""):
+def makemenu(title: str, labels: list, commands: list, maxtries: int = 3):
     tries: int = 0
     if int(len(labels)) != int(len(commands)):
         print("There are " + str(len(labels)) + " labels and " + str(len(commands)) + " commands passed in this menu.")
@@ -115,30 +115,29 @@ def makemenu(title: str, labels: list, commands: list, maxtries: int = 3, auxstr
                 command_set: set = commands[0]
             else:
                 command_set: set = commands[selection]
-            if isinstance(command_set,tuple):
-                function,*args=command_set
+            if isinstance(command_set, tuple):
+                function, *args = command_set
             else:
-                function=command_set
-                args=[]
+                function = command_set
+                args = []
             result=function(*args)
-            if result==True:
+            if result:
                 break
-            
         else:
             tries = invalidoption(tries, maxtries)
 
 
-def testmenu(additional_titel: str = ""):
-    title: str = f"Test Menu {additional_titel}"
+def testmenu(additional_title: str = ""):
+    title: str = f"Test Menu {additional_title}"
     labels: list = ["Return to previous menu", "option1", "option2"]
-    commands: list = [(returnselection,), (testmenu,"Option 1"), (print,"Option 2")]
+    commands: list = [(returnselection,), (testmenu, "Option 1"), (print, "Option 2")]
     makemenu(title, labels, commands)
 
 
 def mainmenu():
     title: str = "WGC Main Menu"
-    labels: list = ["Quit WGC", "Configure shared networks", "Configure P2P networks", "Filebrowser","Testmenu 1", "Testmenu 2"]
-    commands: list = [quitgracefully, (p2mpmenu,), (p2pmenu,), (filebrowser,Path.home()), (testmenu,"nummer 1"), (testmenu,"nummer 2")]
+    labels: list = ["Quit WGC", "Configure shared networks", "Configure P2P networks", "Filebrowser", "Testmenu 1", "Testmenu 2"]
+    commands: list = [quitgracefully, (p2mpmenu,), (p2pmenu,), (filebrowser, Path.cwd()), (testmenu, "number 1"), (testmenu, "number 2")]
     makemenu(title, labels, commands)
 
 def filebrowser(path: Path):
@@ -148,10 +147,10 @@ def filebrowser(path: Path):
     for child in path.iterdir():
         if child.is_file():
             labels.append(f"View File Contents of {child}")
-            commands.append((view_file_content,child))
+            commands.append((view_file_content, child))
         elif child.is_dir():
             labels.append(f"View Directory {child}")
-            commands.append((filebrowser,child))
+            commands.append((filebrowser, child))
     makemenu(title, labels, commands)
 
 def view_file_content(file):
@@ -192,12 +191,12 @@ def modifyp2mpmenu(selection: int, sel: list):
     config: str = sel[selection]
     title: str = "Edit P2MP: " + config
     labels: list = ["Return to P2MP selection", "Edit clients", "De-/activate network", "Parse Config (Test)"]
-    commands: list = ["break", modifyp2mpclientsmenu, p2mpupdownmenu, "readconfig(auxstr1)"]
-    makemenu(title, labels, commands, auxstr1 = config)
+    commands: list = ["break", modifyp2mpclientsmenu, p2mpupdownmenu, (readconfig, "config")]
+    makemenu(title, labels, commands,)
 
 
-def readconfig(filepath: str):
-    file = open(filepath, "r")
+def readconfig(filepath):
+    file = open(wireguardpath + filepath, "r")
     config = file.readlines()
     file.close()
     linecount: int = 0
