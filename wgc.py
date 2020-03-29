@@ -7,21 +7,15 @@ from pathlib import Path
 
 operatingsystem: str = "Windows"
 distribution: str = 'unknown'
-wireguardpath: str = "./wireguard-test/wireguard/"
+wireguardpath: str = Path('.') / "wireguard-test" / "wireguard"
 selectedinterface: str = "wg0"
 
 
 # Main Loop
 def wgc():
-    wgpath()
     clear()
     printlogo()
     mainmenu()
-
-
-def wgpath():
-    global wireguardpath
-    os.chdir(wireguardpath)
 
 
 def printlogo():
@@ -164,13 +158,14 @@ def view_file_content(file):
         
 def p2mpmenu():
     filefilter: str = "-p2mp.conf"
-    interfaces: list = listfile(os.getcwd(), filefilter)
+    interfaces: list = listfile(wireguardpath, filefilter)
     title: str = "Shared Networks (P2MP Server)"
     labels: list = ["Return to Main Menu"]
-    labels.extend(interfaces)
+    commands: list = [returnselection]
+    for interface in interfaces:
+        labels.append(interface)
+        commands.append((modifyp2mpmenu,interface))
     labels.append("Set up a new shared network as the server")
-    commands: list = ["break"]
-    commands.extend(["modifyp2mpmenu(selection, labels)"] * int(len(interfaces)))
     commands.append(createp2mp)
     makemenu(title, labels, commands)
 
@@ -187,16 +182,16 @@ def createp2mp():
     print("TBD")
 
 
-def modifyp2mpmenu(selection: int, sel: list):
-    config: str = sel[selection]
-    title: str = "Edit P2MP: " + config
+def modifyp2mpmenu(interface: str):
+    title: str = "Edit P2MP: " + interface
     labels: list = ["Return to P2MP selection", "Edit clients", "De-/activate network", "Parse Config (Test)"]
-    commands: list = ["break", modifyp2mpclientsmenu, p2mpupdownmenu, (readconfig, "config")]
+    commands: list = ["break", (modifyp2mpclientsmenu,interface), (p2mpupdownmenu,interface), (readconfig, interface)]
     makemenu(title, labels, commands,)
 
 
 def readconfig(filepath):
-    file = open(wireguardpath + filepath, "r")
+    tmp=wireguardpath / filepath
+    file = open(wireguardpath / filepath, "r")
     config = file.readlines()
     file.close()
     linecount: int = 0
@@ -240,11 +235,11 @@ def readconfig(filepath):
                 continue
 
 
-def modifyp2mpclientsmenu():
+def modifyp2mpclientsmenu(interface: str):
     print("TBD")
 
 
-def p2mpupdownmenu():
+def p2mpupdownmenu(interface: str):
     print("TBD")
 
 
