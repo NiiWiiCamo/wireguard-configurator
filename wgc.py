@@ -2,6 +2,7 @@
 # This should be your one-stop shop to get Wireguard installed and configured
 
 import os
+from pathlib import Path
 
 
 operatingsystem: str = "Windows"
@@ -52,7 +53,6 @@ def askyesno(question, default='n'):
 
 
 def clear():
-    import os
     if os.name == 'nt':
         os.system('cls')
     else:
@@ -112,34 +112,57 @@ def makemenu(title: str, labels: list, commands: list, maxtries: int = 3, auxstr
         selection: int = int(input("Please select an option [0-" + str(len(labels) - 1) + "]:"))
         if 0 <= selection <= int(len(labels)-1):
             if int(len(commands)) == 1:
-                command: str = commands[0]
+                command_set: set = commands[0]
             else:
-                command: str = commands[selection]
-            if command == "break":
+                command_set: set = commands[selection]
+            if isinstance(command_set,tuple):
+                function,*args=command_set
+            else:
+                function=command_set
+                args=[]
+            result=function(*args)
+            if result==True:
                 break
-            elif str(command).endswith(")"):
-                exec(command)
-            else:
-                tries = 0
-                command()
+            
         else:
             tries = invalidoption(tries, maxtries)
 
 
-def testmenu():
-    title: str = "Test Menu"
+def testmenu(additional_titel: str = ""):
+    title: str = f"Test Menu {additional_titel}"
     labels: list = ["Return to previous menu", "option1", "option2"]
-    commands: list = ["break", testmenu, testmenu]
+    commands: list = [(returnselection,), (testmenu,"Option 1"), (print,"Option 2")]
     makemenu(title, labels, commands)
 
 
 def mainmenu():
     title: str = "WGC Main Menu"
-    labels: list = ["Quit WGC", "Configure shared networks", "Configure P2P networks", "Testmenu"]
-    commands: list = [quitgracefully, p2mpmenu, p2pmenu, testmenu]
+    labels: list = ["Quit WGC", "Configure shared networks", "Configure P2P networks", "Filebrowser","Testmenu 1", "Testmenu 2"]
+    commands: list = [quitgracefully, (p2mpmenu,), (p2pmenu,), (filebrowser,Path.home()), (testmenu,"nummer 1"), (testmenu,"nummer 2")]
     makemenu(title, labels, commands)
 
+def filebrowser(path: Path):
+    title: str = f"Filebrowser at {path}"
+    labels: list = ["Back"]
+    commands: list = [(returnselection,)]
+    for child in path.iterdir():
+        if child.is_file():
+            labels.append(f"View File Contents of {child}")
+            commands.append((view_file_content,child))
+        elif child.is_dir():
+            labels.append(f"View Directory {child}")
+            commands.append((filebrowser,child))
+    makemenu(title, labels, commands)
 
+def view_file_content(file):
+    if not file.is_file():
+        print(f"Error, {file} is not a File")
+    print()
+    print(f"Content of {file}:")
+    print(file.read_text())
+    print("EOF")
+    input("Press any Key to continue")
+        
 def p2mpmenu():
     filefilter: str = "-p2mp.conf"
     interfaces: list = listfile(os.getcwd(), filefilter)
@@ -158,7 +181,7 @@ def p2pmenu():
 
 
 def returnselection():
-    print("TBD")
+    return True
 
 
 def createp2mp():
