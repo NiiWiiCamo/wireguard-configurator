@@ -100,7 +100,7 @@ def printlistmenu(lis: list):
         print(str(i) + ": " + str(lis[i]))
 
 
-def makemenu(title: str, labels: list, commands: list, maxtries: int = 3):
+def makemenu(title: str, labels: list, commands: list, maxtries: int = 3, auxstr1: str = ""):
     tries: int = 0
     if int(len(labels)) != int(len(commands)):
         print("There are " + str(len(labels)) + " labels and " + str(len(commands)) + " commands passed in this menu.")
@@ -169,8 +169,8 @@ def modifyp2mpmenu(selection: int, sel: list):
     config: str = sel[selection]
     title: str = "Edit P2MP: " + config
     labels: list = ["Return to P2MP selection", "Edit clients", "De-/activate network", "Parse Config (Test)"]
-    commands: list = ["break", modifyp2mpclientsmenu, p2mpupdownmenu, readconfig(config)]
-    makemenu(title, labels, commands)
+    commands: list = ["break", modifyp2mpclientsmenu, p2mpupdownmenu, "readconfig(auxstr1)"]
+    makemenu(title, labels, commands, auxstr1 = config)
 
 
 def readconfig(filepath: str):
@@ -179,6 +179,7 @@ def readconfig(filepath: str):
     file.close()
     linecount: int = 0
     intstartline: int = -1
+    intendline: int = -1
     peerstartlines: list = []
     for line in config:
         line = line.strip()
@@ -191,12 +192,30 @@ def readconfig(filepath: str):
         print("No valid interface config has been found in " + filepath)
     else:
         print("Interface config begins at line " + str(intstartline))
+        interfaceConfig = ConfigInterface()
         if int(len(peerstartlines)) > 0:
-            print("Found " + str(len(peerstartlines)) + " peer configs at lines: ")
-            for i in peerstartlines:
-                print(i)
+            print("Found " + str(len(peerstartlines)) + " peer configs")
+            intendline = peerstartlines[0]
         else:
             print("Found no peers configured in " + filepath)
+            intendline = linecount
+        for line in config[intstartline:intendline]:
+            line = line.strip()
+            if line.startswith("# Alias") or line.startswith("#Alias"):
+                alias = line.split("=")[1].strip()
+                interfaceConfig.Alias = alias
+            elif line.startswith("Address"):
+                ipv4: str = line.split("=")[1].split(",")[0].strip()
+                ipv6: str = line.split("=")[1].split(",")[1].strip()
+                interfaceConfig.ipv4 = ipv4
+                interfaceConfig.ipv6 = ipv6
+            elif line.startswith("ListenPort"):
+                port: int = int(line.split('=')[1].strip())
+            elif line.startswith("PrivateKey"):
+                key: str = line.split("=")[1].strip()
+                interfaceConfig.privkey = key
+            else:
+                continue
 
 
 def modifyp2mpclientsmenu():
@@ -219,17 +238,18 @@ def quitgracefully():
 
 
 class ConfigInterface:
-    interfaceipv4: str = ""
-    interfaceipv6: str = ""
-    listenport: int = ""
-    privatekey: str = ""
+    alias: str = ""
+    ipv4: str = ""
+    ipv6: str = ""
+    port: int = ""
+    privkey: str = ""
 
 
 class ConfigPeer:
     peername: str = ""
     publickey: str = ""
-    peeripv4: str = ""
-    peeripv6: str = ""
+    ipv4: str = ""
+    ipv6: str = ""
 
 
 wgc()
