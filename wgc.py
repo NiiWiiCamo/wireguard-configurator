@@ -1,18 +1,26 @@
 # Wireguard Configurator Python edition
 # This should be your one-stop shop to get Wireguard installed and configured
 
+import os
+
 
 operatingsystem: str = "Windows"
 distribution: str = 'unknown'
-wgpath: str = "./wireguard-test/wireguard"
+wireguardpath: str = "./wireguard-test/wireguard"
 selectedinterface: str = "wg0"
 
 
 # Main Loop
 def wgc():
+    wgpath()
     clear()
     printlogo()
     mainmenu()
+
+
+def wgpath():
+    global wireguardpath
+    os.chdir(wireguardpath)
 
 
 def printlogo():
@@ -52,7 +60,6 @@ def clear():
 
 
 def listfile(path: str, filefilter: str):
-    import os
     lis: list = []
     for file in os.listdir(path):
         if file.endswith(filefilter):
@@ -61,11 +68,11 @@ def listfile(path: str, filefilter: str):
 
 
 def interfacesharedlist():
-    global wgpath
+    wgpath()
     tries: int = 0
     i: int = 0
     maxtries: int = 3
-    interfaces = listfile(wgpath, '-s.conf')
+    interfaces: list = listfile(os.getcwd(), '-s.conf')
     while tries < maxtries:
         print("There are currently " + str(len(interfaces)) + " interfaces with shared networks configured.")
         print("")
@@ -97,19 +104,24 @@ def makemenu(title: str, labels: list, commands: list, maxtries: int = 3):
     tries: int = 0
     if int(len(labels)) != int(len(commands)):
         print("There are " + str(len(labels)) + " labels and " + str(len(commands)) + " commands passed in this menu.")
-        print("These numbers must match. Please check the menu configuration.")
+        print("You must pass the same number of commands .")
     while tries < maxtries:
         print("")
         print(title)
         printlistmenu(labels)
-        selection: int = int(input("Please select an option [0-" + str(len(labels) -1) + "]:"))
-        if 0 <= selection <= int(len(labels)-1) and selection <= int(len(commands)-1):
-            command = commands[selection]
+        selection: int = int(input("Please select an option [0-" + str(len(labels) - 1) + "]:"))
+        if 0 <= selection <= int(len(labels)-1):
+            if int(len(commands)) == 1:
+                command: str = commands[0]
+            else:
+                command: str = commands[selection]
             if command == "break":
                 break
+            elif str(command).endswith(")"):
+                exec(command)
             else:
                 tries = 0
-                exec(command)
+                command()
         else:
             tries = invalidoption(tries, maxtries)
 
@@ -117,15 +129,82 @@ def makemenu(title: str, labels: list, commands: list, maxtries: int = 3):
 def testmenu():
     title: str = "Test Menu"
     labels: list = ["Return to previous menu", "option1", "option2"]
-    commands: list = ["break", "print('Option 1')", "print('Option 2')"]
+    commands: list = ["break", testmenu, testmenu]
     makemenu(title, labels, commands)
 
 
 def mainmenu():
     title: str = "WGC Main Menu"
     labels: list = ["Quit WGC", "Configure shared networks", "Configure P2P networks", "Testmenu"]
-    commands: list = ["quitgracefully()", "interfacesharedlist()", "print('p2p not yet done')", "testmenu()"]
+    commands: list = [quitgracefully, p2mpmenu, p2pmenu, testmenu]
     makemenu(title, labels, commands)
+
+
+def p2mpmenu():
+    filefilter: str = "-p2mp.conf"
+    interfaces: list = listfile(os.getcwd(), filefilter)
+    title: str = "Shared Networks (P2MP Server)"
+    labels: list = ["Return to Main Menu"]
+    labels.extend(interfaces)
+    labels.append("Set up a new shared network as the server")
+    commands: list = ["break"]
+    commands.extend(["modifyp2mpmenu(selection, labels)"] * int(len(interfaces)))
+    commands.append(createp2mp)
+    makemenu(title, labels, commands)
+
+
+def p2pmenu():
+    print('p2p not yet done')
+
+
+def returnselection():
+    print("TBD")
+
+
+def createp2mp():
+    print("TBD")
+
+
+def modifyp2mpmenu(selection: int, sel: list):
+    config: str = sel[selection]
+    title: str = "Edit P2MP: " + config
+    labels: list = ["Return to P2MP selection", "Edit clients", "De-/activate network", "Parse Config (Test)"]
+    commands: list = ["break", modifyp2mpclientsmenu, p2mpupdownmenu, readconfig(config)]
+    makemenu(title, labels, commands)
+
+
+def readconfig(filepath: str):
+    file = open(filepath, "r")
+    config = file.readlines()
+    file.close()
+    linecount: int = 0
+    intstartline: int = -1
+    peerstartlines: list = []
+    for line in config:
+        line = line.strip()
+        if line.find("[Interface]") == 0:
+            intstartline = linecount
+        if line.find("[Peer]") == 0:
+            peerstartlines.append(linecount)
+        linecount = linecount + 1
+    if intstartline == -1:
+        print("No valid interface config has been found in " + filepath)
+    else:
+        print("Interface config begins at line " + str(intstartline))
+        if int(len(peerstartlines)) > 0:
+            print("Found " + str(len(peerstartlines)) + " peer configs at lines: ")
+            for i in peerstartlines:
+                print(i)
+        else:
+            print("Found no peers configured in " + filepath)
+
+
+def modifyp2mpclientsmenu():
+    print("TBD")
+
+
+def p2mpupdownmenu():
+    print("TBD")
 
 
 def invalidoption(tries: int, maxtries: int):
@@ -137,6 +216,20 @@ def invalidoption(tries: int, maxtries: int):
 def quitgracefully():
     print("Thank you for using Wireguard Configurator!")
     quit(0)
+
+
+class ConfigInterface:
+    interfaceipv4: str = ""
+    interfaceipv6: str = ""
+    listenport: int = ""
+    privatekey: str = ""
+
+
+class ConfigPeer:
+    peername: str = ""
+    publickey: str = ""
+    peeripv4: str = ""
+    peeripv6: str = ""
 
 
 wgc()
