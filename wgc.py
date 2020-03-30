@@ -4,7 +4,6 @@
 import os
 from pathlib import Path
 
-
 operatingsystem: str = "Windows"
 distribution: str = 'unknown'
 wireguardpath: str = Path('.') / "wireguard-test" / "wireguard"
@@ -61,33 +60,6 @@ def listfile(path: str, filefilter: str):
     return lis
 
 
-def interfacesharedlist():
-    wgpath()
-    tries: int = 0
-    i: int = 0
-    maxtries: int = 3
-    interfaces: list = listfile(os.getcwd(), '-s.conf')
-    while tries < maxtries:
-        print("There are currently " + str(len(interfaces)) + " interfaces with shared networks configured.")
-        print("")
-        print("0: Return to previous menu")
-        for i in range(len(interfaces)):
-            print(str(i + 1) + ": " + str(interfaces[i]))
-        print(str(i + 2) + ": Set up a new shared interface")
-        print("")
-        selection: int = int(input("Please select an option [0-" + str(i + 2) + "]:"))
-        print("Selection: " + str(selection))
-        if selection == 0:
-            print("Returning to previous menu")
-            break
-        elif 0 < selection < i + 2:
-            print("Editing interface " + str(interfaces[selection - 1]))
-        elif selection == i + 2:
-            print("Create new shared interface")
-        else:
-            tries = invalidoption(tries, maxtries)
-
-
 def printlistmenu(lis: list):
     i: int = 0
     for i in range(len(lis)):
@@ -104,7 +76,7 @@ def makemenu(title: str, labels: list, commands: list, maxtries: int = 3):
         print(title)
         printlistmenu(labels)
         selection: int = int(input("Please select an option [0-" + str(len(labels) - 1) + "]:"))
-        if 0 <= selection <= int(len(labels)-1):
+        if 0 <= selection <= int(len(labels) - 1):
             if int(len(commands)) == 1:
                 command_set: set = commands[0]
             else:
@@ -114,7 +86,7 @@ def makemenu(title: str, labels: list, commands: list, maxtries: int = 3):
             else:
                 function = command_set
                 args = []
-            result=function(*args)
+            result = function(*args)
             if result:
                 break
         else:
@@ -130,9 +102,12 @@ def testmenu(additional_title: str = ""):
 
 def mainmenu():
     title: str = "WGC Main Menu"
-    labels: list = ["Quit WGC", "Configure shared networks", "Configure P2P networks", "Filebrowser", "Testmenu 1", "Testmenu 2"]
-    commands: list = [quitgracefully, (p2mpmenu,), (p2pmenu,), (filebrowser, Path.cwd()), (testmenu, "number 1"), (testmenu, "number 2")]
+    labels: list = ["Quit WGC", "Configure shared networks", "Configure P2P networks", "Filebrowser", "Testmenu 1",
+                    "Testmenu 2"]
+    commands: list = [quitgracefully, (p2mpmenu,), (p2pmenu,), (filebrowser, Path.cwd()), (testmenu, "number 1"),
+                      (testmenu, "number 2")]
     makemenu(title, labels, commands)
+
 
 def filebrowser(path: Path):
     title: str = f"Filebrowser at {path}"
@@ -147,6 +122,7 @@ def filebrowser(path: Path):
             commands.append((filebrowser, child))
     makemenu(title, labels, commands)
 
+
 def view_file_content(file):
     if not file.is_file():
         print(f"Error, {file} is not a File")
@@ -155,7 +131,8 @@ def view_file_content(file):
     print(file.read_text())
     print("EOF")
     input("Press any Key to continue")
-        
+
+
 def p2mpmenu():
     filefilter: str = "-p2mp.conf"
     interfaces: list = listfile(wireguardpath, filefilter)
@@ -164,7 +141,7 @@ def p2mpmenu():
     commands: list = [returnselection]
     for interface in interfaces:
         labels.append(interface)
-        commands.append((modifyp2mpmenu,interface))
+        commands.append((modifyp2mpmenu, interface))
     labels.append("Set up a new shared network as the server")
     commands.append(createp2mp)
     makemenu(title, labels, commands)
@@ -185,12 +162,12 @@ def createp2mp():
 def modifyp2mpmenu(interface: str):
     title: str = "Edit P2MP: " + interface
     labels: list = ["Return to P2MP selection", "Edit clients", "De-/activate network", "Parse Config (Test)"]
-    commands: list = ["break", (modifyp2mpclientsmenu,interface), (p2mpupdownmenu,interface), (readconfig, interface)]
-    makemenu(title, labels, commands,)
+    commands: list = [returnselection, (modifyp2mpclientsmenu, interface), (p2mpupdownmenu, interface),
+                      (readconfig, interface)]
+    makemenu(title, labels, commands, )
 
 
 def readconfig(filepath):
-    tmp=wireguardpath / filepath
     file = open(wireguardpath / filepath, "r")
     config = file.readlines()
     file.close()
@@ -209,21 +186,18 @@ def readconfig(filepath):
         print("No valid interface config has been found in " + filepath)
     else:
         print("Interface config begins at line " + str(intstartline))
-        interfaceConfig = ConfigInterface()
-        if int(len(peerstartlines)) > 0:
-            print("Found " + str(len(peerstartlines)) + " peer configs")
-            intendline = peerstartlines[0]
-        else:
-            print("Found no peers configured in " + filepath)
-            intendline = linecount
+        interfaceConfig = ConfigInterface(filepath)
+        peerstartlines.append(linecount)
+        intendline = peerstartlines[0]
+
         for line in config[intstartline:intendline]:
             line = line.strip()
             if line.startswith("# Alias") or line.startswith("#Alias"):
                 alias = line.split("=")[1].strip()
                 interfaceConfig.Alias = alias
             elif line.startswith("Address"):
-                ipv4: str = line.split("=")[1].split(",")[0].strip()
-                ipv6: str = line.split("=")[1].split(",")[1].strip()
+                ipv4: str = line.split("=")[1].split("/")[0].strip()
+                ipv6: str = line.split("=")[1].split(",")[1].strip().split("/")[0].strip()
                 interfaceConfig.ipv4 = ipv4
                 interfaceConfig.ipv6 = ipv6
             elif line.startswith("ListenPort"):
@@ -234,9 +208,39 @@ def readconfig(filepath):
             else:
                 continue
 
+        for i in range(len(peerstartlines) - 1):
+            peerstart: int = peerstartlines[i]
+            peerend: int = peerstartlines[i + 1]
+            peerConfig = ConfigPeer(filepath)
+
+            for line in config[peerstart:peerend]:
+                line = line.strip()
+                if line.startswith("# Alias") or line.startswith("#Alias"):
+                    alias = line.split("=")[1].strip()
+                    peerConfig.alias = alias
+                elif line.startswith("AllowedIPs"):
+                    ipv4: str = line.split("=")[1].split("/")[0].strip()
+                    ipv6: str = line.split("=")[1].split(",")[1].strip().split("/")[0].strip()
+                    peerConfig.ipv4 = ipv4
+                    peerConfig.ipv6 = ipv6
+                elif line.startswith("PublicKey"):
+                    key: str = line.split("=")[1].strip()
+                    peerConfig.pubkey = key
+                else:
+                    peerConfig.alias = "Unnamed Peer"
+
+            interfaceConfig.addpeer(peerConfig)
+            print("Added Peer Config: ")
+            peerConfig.printpeer()
+            del peerConfig
+
+
 
 def modifyp2mpclientsmenu(interface: str):
-    print("TBD")
+    interfacename: str = interface.split(".")[0].strip()
+    title: str = "TBD Edit Clients on " + interfacename
+    labels: list = ["Return to the previous menu"]
+    commands: list = [returnselection]
 
 
 def p2mpupdownmenu(interface: str):
@@ -245,7 +249,7 @@ def p2mpupdownmenu(interface: str):
 
 def invalidoption(tries: int, maxtries: int):
     tries = tries + 1
-    print("That is not a valid option. ("+ str(tries) + "/" + str(maxtries) + ")")
+    print("That is not a valid option. (" + str(tries) + "/" + str(maxtries) + ")")
     return tries
 
 
@@ -255,18 +259,36 @@ def quitgracefully():
 
 
 class ConfigInterface:
-    alias: str = ""
-    ipv4: str = ""
-    ipv6: str = ""
-    port: int = ""
-    privkey: str = ""
+    def __init__(self, interface: str, alias: str = "", ipv4: str = "", ipv6: str = "", port: int = "",
+                 privkey: str = ""):
+        self.interface = interface.split(".")[0].strip()
+        self.alias: str = alias
+        self.ipv4: str = ipv4
+        self.ipv6: str = ipv6
+        self.port: int = port
+        self.privkey: str = privkey
+        self.peers: list = []
+
+    def addpeer(self, peer):
+        self.peers.append(peer)
+
+    def listpeers(self):
+        print("Peers in " + self.interface)
+        for peer in self.peers:
+            peer.printpeer()
 
 
 class ConfigPeer:
-    peername: str = ""
-    publickey: str = ""
-    ipv4: str = ""
-    ipv6: str = ""
+    def __init__(self, interface: str, alias: str = "", publickey: str = "", ipv4: str = "", ipv6: str = ""):
+        self.interface = interface.split(".")[0].strip()
+        self.alias: str = alias
+        self.publickey: str = publickey
+        self.ipv4: str = ipv4
+        self.ipv6: str = ipv6
+
+    def printpeer(self):
+        print("Peer: " + self.alias)
+        print("IPv4: " + self.ipv4)
 
 
 wgc()
