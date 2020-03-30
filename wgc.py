@@ -112,7 +112,7 @@ def mainmenu():
     title: str = "WGC Main Menu"
     labels: list = ["Quit WGC", "Configure shared networks", "Configure P2P networks", "Filebrowser", "Testmenu 1",
                     "Testmenu 2"]
-    commands: list = [quitgracefully, (p2mpmenu,), (p2pmenu,), (filebrowser, Path.cwd()), (testmenu, "number 1"),
+    commands: list = [quitgracefully, p2mpmenu, p2pmenu, (filebrowser, Path.cwd()), (testmenu, "number 1"),
                       (testmenu, "number 2")]
     makemenu(title, labels, commands)
 
@@ -163,11 +163,6 @@ def p2pmenu():
     print('p2p not yet done')
 
 
-# Menu leaver. Basically "There's the door."
-def returnselection():
-    return True
-
-
 # Basically readconfigs equally hot cousin. Does everything backwards.
 def createp2mp():
     print("TBD")
@@ -175,11 +170,40 @@ def createp2mp():
 
 # Something, something, I might need this later.
 def modifyp2mpmenu(interface: str):
-    title: str = "Edit P2MP: " + interface
-    labels: list = ["Return to P2MP selection", "Edit clients", "De-/activate network", "Parse Config (Test)"]
-    commands: list = [returnselection, (modifyp2mpclientsmenu, interface), (p2mpupdownmenu, interface),
-                      (readconfig, interface)]
-    makemenu(title, labels, commands, )
+    conf = readconfig(interface)
+    intname: str = interface.split(".")[0].strip()
+    alias: str = conf.alias
+    ipv4 = conf.ipv4
+    ipv6 = conf.ipv6
+    peercount: int = len(conf.peers)
+    header: str = "Editing P2MP Interface: " + intname
+    if alias != "":
+        header = header + " with Alias: " + alias
+    print("")
+    print(header)
+    print("Current Interface settings:")
+    print("IPv4 Address: " + ipv4)
+    print("IPv6 Address: " + ipv6)
+    print("No. of peers: " + str(peercount))
+    title: str = "Editing P2MP Interface: " + intname
+    if alias != "":
+        title = title + "with Alias: " + alias
+    labels: list = ["Return to P2MP selection", "Edit clients", "De-/activate network"]
+    commands: list = [returnselection, (modifyp2mpclientsmenu, conf), (p2mpupdownmenu, interface)]
+    makemenu(title, labels, commands)
+
+
+# The thing you might do after reading and before writing
+def modifyp2mpclientsmenu(conf):
+    title: str = "TBD Edit Clients on " + conf.interface
+    labels: list = ["Return to the previous menu"]
+    commands: list = [returnselection]
+    makemenu(title, labels, commands)
+
+
+# Turn me on! Flip my switch!
+def p2mpupdownmenu(interface: str):
+    print("TBD")
 
 
 # The actual config file parser. Puts everything away neatly into an object and returns that to you.
@@ -202,25 +226,20 @@ def readconfig(filepath):
         raise Exception("No valid interface config has been found in " + filepath)
     interfaceConfig = ConfigInterface(filepath)
     peerstartlines.append(linecount)
-    if len(peerstartlines) == 1:
-        intendline = peerstartlines[0]
+    intendline = peerstartlines[0]
 
     # Parse Interface block, add to instanced object
     for line in config[intstartline:intendline]:
         line = line.strip()
         if line.startswith("# Alias") or line.startswith("#Alias"):
-            alias = line.split("=")[1].strip()
-            interfaceConfig.Alias = alias
-        elif line.startswith("Address"):
-            ipv4: str = line.split("=")[1].split("/")[0].strip()
-            ipv6: str = line.split("=")[1].split(",")[1].strip().split("/")[0].strip()
-            interfaceConfig.ipv4 = ipv4
-            interfaceConfig.ipv6 = ipv6
+            interfaceConfig.alias = line.split("=")[1].strip()
+        elif line.startswith("Address"):  # Includes netmask
+            interfaceConfig.ipv4 = line.split("=")[1].split(",")[0].strip()
+            interfaceConfig.ipv6 = line.split("=")[1].split(",")[1].strip()
         elif line.startswith("ListenPort"):
-            port: int = int(line.split('=')[1].strip())
+            interfaceConfig.port = int(line.split('=')[1].strip())
         elif line.startswith("PrivateKey"):
-            key: str = line.split("=")[1].strip()
-            interfaceConfig.privkey = key
+            interfaceConfig.privkey = line.split("=")[1].strip()
 
     # Parse Peer block, add to instanced object, add object to list in interface config, delete object
     for i in range(len(peerstartlines) - 1):
@@ -251,24 +270,16 @@ def readconfig(filepath):
     return interfaceConfig
 
 
-# The thing you might do after reading and before writing
-def modifyp2mpclientsmenu(interface: str):
-    interfacename: str = interface.split(".")[0].strip()
-    title: str = "TBD Edit Clients on " + interfacename
-    labels: list = ["Return to the previous menu"]
-    commands: list = [returnselection]
-
-
-# Turn me on! Flip my switch!
-def p2mpupdownmenu(interface: str):
-    print("TBD")
-
-
 # For when the user entered something invalid in a menu. Might give them another chance.
 def invalidoption(tries: int, maxtries: int):
     tries = tries + 1
     print("That is not a valid option. (" + str(tries) + "/" + str(maxtries) + ")")
     return tries
+
+
+# Menu leaver. Basically "There's the door."
+def returnselection():
+    return True
 
 
 # For when you don't throw a tantrum and want to thank the user.
