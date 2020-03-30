@@ -10,13 +10,14 @@ wireguardpath: str = Path('.') / "wireguard-test" / "wireguard"
 selectedinterface: str = "wg0"
 
 
-# Main Loop
+# Main Loop. Yes.
 def wgc():
     clear()
     printlogo()
     mainmenu()
 
 
+# Because MARKETING!
 def printlogo():
     print("oooooo   oooooo     oooo   .oooooo.      .oooooo.      ")
     print(" `888.    `888.     .8'   d8P'  `Y8b    d8P'  `Y8b     ")
@@ -29,6 +30,7 @@ def printlogo():
     print("")
 
 
+# The things you do first are not always bad. This might be though.
 def askyesno(question, default='n'):
     while "the answer is invalid":
         if default == 'y':
@@ -45,6 +47,7 @@ def askyesno(question, default='n'):
                 return True
 
 
+# Does this even work?
 def clear():
     if os.name == 'nt':
         os.system('cls')
@@ -52,6 +55,7 @@ def clear():
         os.system('clear')
 
 
+# Because you might want to know what files are actually there.
 def listfile(path: str, filefilter: str):
     lis: list = []
     for file in os.listdir(path):
@@ -60,12 +64,14 @@ def listfile(path: str, filefilter: str):
     return lis
 
 
+# Getting your menu displayed. Might be useful for visualizing lists. Like Menu items. Or lists.
 def printlistmenu(lis: list):
     i: int = 0
     for i in range(len(lis)):
         print(str(i) + ": " + str(lis[i]))
 
 
+# Your friendly neighbourhood menu builder. Might be called Bob.
 def makemenu(title: str, labels: list, commands: list, maxtries: int = 3):
     tries: int = 0
     if int(len(labels)) != int(len(commands)):
@@ -93,6 +99,7 @@ def makemenu(title: str, labels: list, commands: list, maxtries: int = 3):
             tries = invalidoption(tries, maxtries)
 
 
+# Bob's mom, always encouraging and ready to help.
 def testmenu(additional_title: str = ""):
     title: str = f"Test Menu {additional_title}"
     labels: list = ["Return to previous menu", "option1", "option2"]
@@ -100,6 +107,7 @@ def testmenu(additional_title: str = ""):
     makemenu(title, labels, commands)
 
 
+# The. Menu.
 def mainmenu():
     title: str = "WGC Main Menu"
     labels: list = ["Quit WGC", "Configure shared networks", "Configure P2P networks", "Filebrowser", "Testmenu 1",
@@ -109,6 +117,7 @@ def mainmenu():
     makemenu(title, labels, commands)
 
 
+# Something @jkoan did to teach me, don't know why I keep it.
 def filebrowser(path: Path):
     title: str = f"Filebrowser at {path}"
     labels: list = ["Back"]
@@ -123,6 +132,7 @@ def filebrowser(path: Path):
     makemenu(title, labels, commands)
 
 
+# Another thing from @jkoan. Keeping this so filebrowser doesn't get lonely.
 def view_file_content(file):
     if not file.is_file():
         print(f"Error, {file} is not a File")
@@ -133,6 +143,7 @@ def view_file_content(file):
     input("Press any Key to continue")
 
 
+# Shared network menu. Basic beach.
 def p2mpmenu():
     filefilter: str = "-p2mp.conf"
     interfaces: list = listfile(wireguardpath, filefilter)
@@ -147,18 +158,22 @@ def p2mpmenu():
     makemenu(title, labels, commands)
 
 
+# P2P network menu. Just as basic.
 def p2pmenu():
     print('p2p not yet done')
 
 
+# Menu leaver. Basically "There's the door."
 def returnselection():
     return True
 
 
+# Basically readconfigs equally hot cousin. Does everything backwards.
 def createp2mp():
     print("TBD")
 
 
+# Something, something, I might need this later.
 def modifyp2mpmenu(interface: str):
     title: str = "Edit P2MP: " + interface
     labels: list = ["Return to P2MP selection", "Edit clients", "De-/activate network", "Parse Config (Test)"]
@@ -167,6 +182,7 @@ def modifyp2mpmenu(interface: str):
     makemenu(title, labels, commands, )
 
 
+# The actual config file parser. Puts everything away neatly into an object and returns that to you.
 def readconfig(filepath):
     file = open(wireguardpath / filepath, "r")
     config = file.readlines()
@@ -183,59 +199,59 @@ def readconfig(filepath):
             peerstartlines.append(linecount)
         linecount = linecount + 1
     if intstartline == -1:
-        print("No valid interface config has been found in " + filepath)
-    else:
-        print("Interface config begins at line " + str(intstartline))
-        interfaceConfig = ConfigInterface(filepath)
-        peerstartlines.append(linecount)
+        raise Exception("No valid interface config has been found in " + filepath)
+    interfaceConfig = ConfigInterface(filepath)
+    peerstartlines.append(linecount)
+    if len(peerstartlines) == 1:
         intendline = peerstartlines[0]
 
-        for line in config[intstartline:intendline]:
+    # Parse Interface block, add to instanced object
+    for line in config[intstartline:intendline]:
+        line = line.strip()
+        if line.startswith("# Alias") or line.startswith("#Alias"):
+            alias = line.split("=")[1].strip()
+            interfaceConfig.Alias = alias
+        elif line.startswith("Address"):
+            ipv4: str = line.split("=")[1].split("/")[0].strip()
+            ipv6: str = line.split("=")[1].split(",")[1].strip().split("/")[0].strip()
+            interfaceConfig.ipv4 = ipv4
+            interfaceConfig.ipv6 = ipv6
+        elif line.startswith("ListenPort"):
+            port: int = int(line.split('=')[1].strip())
+        elif line.startswith("PrivateKey"):
+            key: str = line.split("=")[1].strip()
+            interfaceConfig.privkey = key
+
+    # Parse Peer block, add to instanced object, add object to list in interface config, delete object
+    for i in range(len(peerstartlines) - 1):
+        peerstart: int = peerstartlines[i]
+        peerend: int = peerstartlines[i + 1]
+        peerConfig = ConfigPeer(filepath)
+
+        for line in config[peerstart:peerend]:
             line = line.strip()
             if line.startswith("# Alias") or line.startswith("#Alias"):
                 alias = line.split("=")[1].strip()
-                interfaceConfig.Alias = alias
-            elif line.startswith("Address"):
+                peerConfig.alias = alias
+            elif line.startswith("AllowedIPs"):
                 ipv4: str = line.split("=")[1].split("/")[0].strip()
                 ipv6: str = line.split("=")[1].split(",")[1].strip().split("/")[0].strip()
-                interfaceConfig.ipv4 = ipv4
-                interfaceConfig.ipv6 = ipv6
-            elif line.startswith("ListenPort"):
-                port: int = int(line.split('=')[1].strip())
-            elif line.startswith("PrivateKey"):
+                peerConfig.ipv4 = ipv4
+                peerConfig.ipv6 = ipv6
+            elif line.startswith("PublicKey"):
                 key: str = line.split("=")[1].strip()
-                interfaceConfig.privkey = key
+                peerConfig.pubkey = key
             else:
-                continue
+                peerConfig.alias = "Unnamed Peer"
 
-        for i in range(len(peerstartlines) - 1):
-            peerstart: int = peerstartlines[i]
-            peerend: int = peerstartlines[i + 1]
-            peerConfig = ConfigPeer(filepath)
+        interfaceConfig.addpeer(peerConfig)
+        del peerConfig
 
-            for line in config[peerstart:peerend]:
-                line = line.strip()
-                if line.startswith("# Alias") or line.startswith("#Alias"):
-                    alias = line.split("=")[1].strip()
-                    peerConfig.alias = alias
-                elif line.startswith("AllowedIPs"):
-                    ipv4: str = line.split("=")[1].split("/")[0].strip()
-                    ipv6: str = line.split("=")[1].split(",")[1].strip().split("/")[0].strip()
-                    peerConfig.ipv4 = ipv4
-                    peerConfig.ipv6 = ipv6
-                elif line.startswith("PublicKey"):
-                    key: str = line.split("=")[1].strip()
-                    peerConfig.pubkey = key
-                else:
-                    peerConfig.alias = "Unnamed Peer"
-
-            interfaceConfig.addpeer(peerConfig)
-            print("Added Peer Config: ")
-            peerConfig.printpeer()
-            del peerConfig
+    # Returns interface config object
+    return interfaceConfig
 
 
-
+# The thing you might do after reading and before writing
 def modifyp2mpclientsmenu(interface: str):
     interfacename: str = interface.split(".")[0].strip()
     title: str = "TBD Edit Clients on " + interfacename
@@ -243,16 +259,19 @@ def modifyp2mpclientsmenu(interface: str):
     commands: list = [returnselection]
 
 
+# Turn me on! Flip my switch!
 def p2mpupdownmenu(interface: str):
     print("TBD")
 
 
+# For when the user entered something invalid in a menu. Might give them another chance.
 def invalidoption(tries: int, maxtries: int):
     tries = tries + 1
     print("That is not a valid option. (" + str(tries) + "/" + str(maxtries) + ")")
     return tries
 
 
+# For when you don't throw a tantrum and want to thank the user.
 def quitgracefully():
     print("Thank you for using Wireguard Configurator!")
     quit(0)
