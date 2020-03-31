@@ -367,16 +367,16 @@ def writeconfig(conf, filepath):
     # Private Key
     lines.append("PrivateKey = " + conf.privkey)
 
-    # PreDown
-    if conf.predown != "":
-        lines.append("PreDown = " + conf.predown)
-    # PreDown
+    # PreUp
     if conf.preup != "":
-        lines.append("PreUp = " + conf.postdown)
+        lines.append("PreUp = " + conf.preup)
+    # PostDown
+    if conf.postup != "":
+        lines.append("PostUp = " + conf.postup)
     # PreDown
     if conf.predown != "":
         lines.append("PreDown = " + conf.predown)
-    # PreDown
+    # PostDown
     if conf.postdown != "":
         lines.append("PostDown = " + conf.postdown)
 
