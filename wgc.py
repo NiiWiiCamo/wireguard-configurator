@@ -384,7 +384,7 @@ def writeconfig(conf, filepath):
     for peer in conf.peers:
         lines.append("[Peer]")
         # If Alias exists write to config
-        if not peer.alias == "" or peer.alias == "Unnamed Client":
+        if not peer.alias == "" or peer.alias == "Unnamed Peer":
             lines.append("# Alias = " + peer.alias)
 
         # Build address line
