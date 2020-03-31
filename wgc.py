@@ -8,7 +8,7 @@ import copy
 operatingsystem: str = "Windows"
 distribution: str = 'unknown'
 wireguardpath: str = Path('.') / "wireguard-test" / "wireguard"
-config_cache={}
+config_cache = {}
 
 # Main Loop. Yes.
 def wgc():
@@ -27,7 +27,6 @@ def printlogo():
     print("     `888'    `888'      `88.    .88'  `88b    ooo     ")
     print("      `8'      `8'        `Y8bood8P'    `Y8bood8P'  .py")
     print("WireGuard Configurator - Python Edition")
-    print("")
 
 
 # The things you do first are not always bad. This might be though.
@@ -78,9 +77,15 @@ def makemenu(title: str, labels: list, commands: list, maxtries: int = 3):
         print("You must pass the same number of commands .")
     while tries < maxtries:
         print("")
-        print(title)
+        if title != "":
+            print(title)
         printlistmenu(labels)
-        selection: int = int(input("Please select an option [0-" + str(len(labels) - 1) + "]:"))
+        selection = input("Please select an option [0-" + str(len(labels) - 1) + "]:")
+        if selection.isdigit():
+            selection: int = int(selection)
+        else:
+            tries = invalidoption(tries, maxtries)
+            continue
         if 0 <= selection <= int(len(labels) - 1):
             if int(len(commands)) == 1:
                 command_set: set = commands[0]
@@ -170,30 +175,33 @@ def createp2mp():
 
 # Something, something, I might need this later.
 def modifyp2mpmenu(interface: str):
+    filepath = wireguardpath / interface
     # ask cache if config is parsed otherwise parse a new one
     conf: ConfigInterface = config_cache.get(interface, None)
-    if conf==None:
-        conf: ConfigInterface = readconfig(interface)
-        config_cache[interface]=conf
+    if conf is None:
+        conf: ConfigInterface = readconfig(filepath)
+        config_cache[interface] = conf
     intname = conf.interface
     alias: str = conf.alias
     ipv4 = conf.ipv4
     ipv6 = conf.ipv6
     peercount: int = len(conf.peers)
     print("")
-    print("Editing P2MP Interface: " + intname)
+    print(f"Interface settings for {intname}:")
     if alias != "":
         print("Interface Alias: " + alias)
-    print("")
-    print("Current Interface settings:")
     print("IPv4 Address: " + ipv4)
     print("IPv6 Address: " + ipv6)
     print("No. of peers: " + str(peercount))
-    title: str = "Editing: " + intname
-    labels: list = ["Return to P2MP selection", "Print Peers","Edit clients", "Add client", "De-/activate network"]
-    commands: list = [returnmenu, conf.listpeers, (p2mppeerselectmenu, conf), (p2mpaddpeer, conf), (p2mpupdownmenu, interface)]
+    title: str = ""
+    labels: list = ["Return to P2MP selection", "Print Peers", "Edit clients", "Add client", "De-/activate network"]
+    commands: list = [returnmenu, conf.listpeers, (p2mppeerselectmenu, conf), (p2mpaddpeer, conf),
+                      (p2mpupdownmenu, interface)]
     makemenu(title, labels, commands)
-
+    if askyesno("Do you want to backup and save?"):
+        if backup(filepath):
+            os.remove(filepath)
+            writeconfig(conf, filepath)
 
 # The thing you might do after reading and before writing
 def p2mppeerselectmenu(conf):
@@ -210,9 +218,9 @@ def p2mppeerselectmenu(conf):
     print("Active peer configs:")
     for peer in conf.peers:
         labels.append(f"\nAlias: {peer.alias}\nIPv4 : {peer.ipv4}\nIPv6 : {peer.ipv6}\n")
-        commands.append((p2mppeermenu,peer))
+        commands.append((p2mppeermenu, peer))
     makemenu(title, labels, commands)
-    return True # Skip this menu until lables are dynamic
+    return True  # Skip this menu until labels are dynamic
 
 def p2mppeermenu(peer):
     peer.printpeer()
@@ -221,15 +229,13 @@ def p2mppeermenu(peer):
     commands: list = [returnmenu, (peeredit, peer, "alias"), (peeredit, peer, "ipv4"),
                       (peeredit, peer, "ipv6"), (peeredit, peer, "publickey")]
     makemenu(title, labels, commands)
-    return True # Skip this menu until lables are dynamic
     
 
-
 def peeredit(peer, option: str):
-    attribute=getattr(peer, option)
+    attribute = getattr(peer, option)
     print("Current value for " + option + " : " + attribute)
-    newvalue = input("Enter new value or 0 to cancel: ")#TODO: better use empty string 
-    if not newvalue == "0":
+    newvalue = input("Enter new value or 0 to cancel: ")  # TODO: better use empty string => Is it though?
+    if newvalue != "0":
         setattr(peer, option, newvalue)
 
 
@@ -244,7 +250,7 @@ def p2mpupdownmenu(interface: str):
 
 # The actual config file parser. Puts everything away neatly into an object and returns that to you.
 def readconfig(filepath):
-    file = open(wireguardpath / filepath, "r")
+    file = open(filepath, "r")
     config = file.readlines()
     file.close()
     linecount: int = 0
@@ -258,7 +264,7 @@ def readconfig(filepath):
             peerstartlines.append(linecount)
         linecount = linecount + 1
     if intstartline == -1:
-        raise Exception("No valid interface config has been found in " + filepath)
+        raise Exception("No valid interface config has been found in " + str(filepath))
     interfaceConfig = ConfigInterface(filepath)
     peerstartlines.append(linecount)
     intendline: int = peerstartlines[0]
@@ -275,12 +281,20 @@ def readconfig(filepath):
             interfaceConfig.port = int(line.split('=')[1].strip())
         elif line.startswith("PrivateKey"):
             interfaceConfig.privkey = line.split("=")[1].strip()
+        elif line.startswith("PreUp"):
+            interfaceConfig.preup = line.split("=")[1].strip()
+        elif line.startswith("PostUp"):
+            interfaceConfig.postup = line.split("=")[1].strip()
+        elif line.startswith("PreDown"):
+            interfaceConfig.predown = line.split("=")[1].strip()
+        elif line.startswith("PostDown"):
+            interfaceConfig.postdown = line.split("=")[1].strip()
 
     # Parse Peer block, add to instanced object, add object to list in interface config, delete object
     for i in range(len(peerstartlines) - 1):
         peerstart: int = peerstartlines[i]
         peerend: int = peerstartlines[i + 1]
-        peerConfig = ConfigPeer(filepath)
+        peerConfig = ConfigPeer()
 
         for line in config[peerstart:peerend]:
             line = line.strip()
@@ -293,9 +307,8 @@ def readconfig(filepath):
                 peerConfig.ipv4 = ipv4
                 peerConfig.ipv6 = ipv6
             elif line.startswith("PublicKey"):
-                key: str = line.split("=")[1].strip()
-                peerConfig.pubkey = key
-            else:
+                peerConfig.publickey = line.split(" ")[2].strip()
+            elif peerConfig.alias == "":
                 peerConfig.alias = "Unnamed Peer"
 
         interfaceConfig.addpeer(peerConfig)
@@ -303,6 +316,99 @@ def readconfig(filepath):
 
     # Returns interface config object
     return interfaceConfig
+
+
+# The thing before The Magic Key (Track 5)
+def backup(filepath):
+    import shutil
+    filebackuppath: str = ""
+    if os.path.isfile(filepath):
+        tmp1: Path = Path(str(filepath) + ".bck")
+        if os.path.isfile(tmp1):
+            for i in range(99):
+                tmp2: Path = Path(str(tmp1) + str(i))
+                if os.path.isfile(tmp2):
+                    continue
+                else:
+                    filebackuppath = tmp2
+                    break
+            if filebackuppath == "":
+                raise Exception("Too many backups already existing!")
+        else:
+            filebackuppath = tmp1
+        shutil.copyfile(filepath, filebackuppath)
+        return True
+    else:
+        raise Exception("File does not exist!")
+
+
+# The Magic Key, needs config to NOT exist already. Backup / move beforehand!
+def writeconfig(conf, filepath):
+    if os.path.isfile(filepath):
+        raise Exception("File already exists. Overwriting currently not supported!")
+    f = open(filepath, "x")
+    lines: list = ["# Config file generated by Wireguard Configurator (wgc.py)", "# at " + timestamp(), "[Interface]"]
+    # If Alias exists write to config
+    if conf.alias != "":
+        lines.append("# Alias = " + conf.alias)
+
+    # Build address line
+    address: str = conf.ipv4
+    if address != "":
+        address = address + "/32"
+    if conf.ipv6 != "":
+        if address != "":
+            address = address + ","
+        address = address + conf.ipv6 + "/128"
+    lines.append("Address = " + address)
+
+    # Port line
+    lines.append("ListenPort = " + str(conf.port))
+    # Private Key
+    lines.append("PrivateKey = " + conf.privkey)
+
+    # PreDown
+    if conf.predown != "":
+        lines.append("PreDown = " + conf.predown)
+    # PreDown
+    if conf.preup != "":
+        lines.append("PreUp = " + conf.postdown)
+    # PreDown
+    if conf.predown != "":
+        lines.append("PreDown = " + conf.predown)
+    # PreDown
+    if conf.postdown != "":
+        lines.append("PostDown = " + conf.postdown)
+
+    # Peer configs:
+    for peer in conf.peers:
+        lines.append("[Peer]")
+        # If Alias exists write to config
+        if not peer.alias == "" or peer.alias == "Unnamed Client":
+            lines.append("# Alias = " + peer.alias)
+
+        # Build address line
+        address: str = peer.ipv4
+        if peer.ipv6 != "":
+            if address != "":
+                address = address + ","
+            address = address + peer.ipv6
+        lines.append("Address = " + address)
+        # Public Key
+        lines.append("PublicKey = " + peer.publickey)
+
+    # Write lines to file and close
+    f.writelines(lines)
+    f.close()
+
+
+# Make timestamp. For stamping. Time.
+def timestamp():
+    import time
+    t = time.localtime(time.time())
+    stamp = "%d-%d-%d %d:%d:%d" % (
+        t.tm_mday, t.tm_mon, t.tm_year, t.tm_hour, t.tm_min, t.tm_sec)
+    return stamp
 
 
 # For when the user entered something invalid in a menu. Might give them another chance.
@@ -330,13 +436,17 @@ def quitgracefully():
 
 class ConfigInterface:
     def __init__(self, interface: str, alias: str = "", ipv4: str = "", ipv6: str = "", port: int = "",
-                 privkey: str = ""):
+                 privkey: str = "", preup: str = "", postup: str = "", predown: str = "", postdown: str = ""):
         self.interface = interface.split(".")[0].strip()
         self.alias: str = alias
         self.ipv4: str = ipv4
         self.ipv6: str = ipv6
         self.port: int = port
         self.privkey: str = privkey
+        self.preup: str = preup
+        self.postup: str = postup
+        self.predown: str = predown
+        self.postdown: str = postdown
         self.peers: list = []
 
     def addpeer(self, peer):
