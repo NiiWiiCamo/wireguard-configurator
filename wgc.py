@@ -265,7 +265,7 @@ def readconfig(filepath):
         linecount = linecount + 1
     if intstartline == -1:
         raise Exception("No valid interface config has been found in " + str(filepath))
-    interfaceConfig = ConfigInterface(filepath)
+    interfaceConfig = ConfigInterface(filepath.stem)
     peerstartlines.append(linecount)
     intendline: int = peerstartlines[0]
 
@@ -398,7 +398,8 @@ def writeconfig(conf, filepath):
         lines.append("PublicKey = " + peer.publickey)
 
     # Write lines to file and close
-    f.writelines(lines)
+    for line in lines:
+        f.write(line + "\n")
     f.close()
 
 
@@ -437,7 +438,7 @@ def quitgracefully():
 class ConfigInterface:
     def __init__(self, interface: str, alias: str = "", ipv4: str = "", ipv6: str = "", port: int = "",
                  privkey: str = "", preup: str = "", postup: str = "", predown: str = "", postdown: str = ""):
-        self.interface = interface.split(".")[0].strip()
+        self.interface = interface
         self.alias: str = alias
         self.ipv4: str = ipv4
         self.ipv6: str = ipv6
