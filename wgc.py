@@ -8,7 +8,7 @@ import copy
 operatingsystem: str = "Windows"
 distribution: str = 'unknown'
 wireguardpath: str = Path('.') / "wireguard-test" / "wireguard"
-
+config_cache={}
 
 # Main Loop. Yes.
 def wgc():
@@ -170,7 +170,11 @@ def createp2mp():
 
 # Something, something, I might need this later.
 def modifyp2mpmenu(interface: str):
-    conf: ConfigInterface = readconfig(interface)
+    # ask cache if config is parsed otherwise parse a new one
+    conf: ConfigInterface = config_cache.get(interface, None)
+    if conf==None:
+        conf: ConfigInterface = readconfig(interface)
+        config_cache[interface]=conf
     intname = conf.interface
     alias: str = conf.alias
     ipv4 = conf.ipv4
@@ -186,14 +190,13 @@ def modifyp2mpmenu(interface: str):
     print("IPv6 Address: " + ipv6)
     print("No. of peers: " + str(peercount))
     title: str = "Editing: " + intname
-    labels: list = ["Return to P2MP selection", "Edit clients", "Add client", "De-/activate network"]
-    commands: list = [returnmenu, (p2mppeerselectmenu, conf), (p2mpaddpeer, conf), (p2mpupdownmenu, interface)]
+    labels: list = ["Return to P2MP selection", "Print Peers","Edit clients", "Add client", "De-/activate network"]
+    commands: list = [returnmenu, conf.listpeers, (p2mppeerselectmenu, conf), (p2mpaddpeer, conf), (p2mpupdownmenu, interface)]
     makemenu(title, labels, commands)
 
 
 # The thing you might do after reading and before writing
 def p2mppeerselectmenu(conf):
-    originalconf = copy.deepcopy(conf)
     intname = conf.interface
     alias = conf.alias
     title: str = ""
@@ -206,32 +209,28 @@ def p2mppeerselectmenu(conf):
     print("")
     print("Active peer configs:")
     for peer in conf.peers:
-        labels.append("\nAlias: " + peer.alias + "\nIPv4 : " + peer.ipv4 +
-                      "\nIPv6 : " + peer.ipv6 + "\n")
-        commands.append("returnselection")
-    selection: int = makemenu(title, labels, commands)
-    p2mppeermenu(conf, selection - 1)
+        labels.append(f"\nAlias: {peer.alias}\nIPv4 : {peer.ipv4}\nIPv6 : {peer.ipv6}\n")
+        commands.append((p2mppeermenu,peer))
+    makemenu(title, labels, commands)
+    return True # Skip this menu until lables are dynamic
 
-
-def p2mppeermenu(conf, peerindex):
-    while True:
-        peer = conf.peers[peerindex]
-        peer.printpeer()
-        title: str = ""
-        labels: list = ["Return to previous menu", "Edit Alias", "Edit IPv4", "Edit IPV6", "Edit Public Key"]
-        commands: list = [returnmenu, ("peer = peeredit", peer, "alias"), ("peer = peeredit", peer, "ipv4"),
-                          (peeredit, peer, "ipv6"), (peeredit, peer, "publickey")]
-        makemenu(title, labels, commands)
+def p2mppeermenu(peer):
+    peer.printpeer()
+    title: str = ""
+    labels: list = ["Return to previous menu", "Edit Alias", "Edit IPv4", "Edit IPV6", "Edit Public Key"]
+    commands: list = [returnmenu, (peeredit, peer, "alias"), (peeredit, peer, "ipv4"),
+                      (peeredit, peer, "ipv6"), (peeredit, peer, "publickey")]
+    makemenu(title, labels, commands)
+    return True # Skip this menu until lables are dynamic
+    
 
 
 def peeredit(peer, option: str):
-    print("Current value for " + option + " : " + peer.option)
-    newvalue = input("Enter new value or 0 to cancel: ")
-    if newvalue == "0":
-        return peer
-    else:
-        peer.option = newvalue
-        return peer
+    attribute=getattr(peer, option)
+    print("Current value for " + option + " : " + attribute)
+    newvalue = input("Enter new value or 0 to cancel: ")#TODO: better use empty string 
+    if not newvalue == "0":
+        setattr(peer, option, newvalue)
 
 
 def p2mpaddpeer(conf):
@@ -347,6 +346,7 @@ class ConfigInterface:
         print("Peers in " + self.interface)
         for peer in self.peers:
             peer.printpeer()
+            print()
 
 
 class ConfigPeer:
