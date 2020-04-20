@@ -192,8 +192,8 @@ def mainmenu():
     menu.addItem(item)
     
     item=MenuItemAlice()
-    item.set_static_label("filebrowser")
-    item.set_action(filebrowser,Path("."))
+    item.set_static_label("Configure P2P networks")
+    item.set_action(p2pmenu)
     menu.addItem(item)
     
     menu.run()
