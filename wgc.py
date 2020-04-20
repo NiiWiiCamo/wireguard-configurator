@@ -3,12 +3,13 @@
 
 import os
 from pathlib import Path
-import copy
+from typing import List
 
 operatingsystem: str = "Windows"
 distribution: str = 'unknown'
 wireguardpath: str = Path('.') / "wireguard-test" / "wireguard"
 config_cache = {}
+
 
 # Main Loop. Yes.
 def wgc():
@@ -63,78 +64,158 @@ def listfile(path: str, filefilter: str):
     return lis
 
 
-# Getting your menu displayed. Might be useful for visualizing lists. Like Menu items. Or lists.
+# Getting your menu displayed. Might be useful for visualizing lists.
+# Like Menu items. Or lists.
 def printlistmenu(lis: list):
     for i in range(len(lis)):
         print(str(i) + ": " + str(lis[i]))
 
 
+# The girl from next door
+class MenuItemAlice(object):
+    label: str = None
+    label_is_static: bool = True
+    label_arguments: dict = {}
+    action: list = []
+
+    def __init__(self):
+        pass  # Do nothing
+
+    def set_static_label(self, value):
+        self.label_is_static = True
+        self.label_arguments = {}
+        self.label = value
+        return self
+
+    def set_dynamic_lable(self, format_string, **kwargs):
+        self.label_is_static = False
+        self.label_arguments = kwargs
+        self.label = format_string
+        return self
+
+    def set_action(self, *args):
+        self.action = args
+        return self
+
+    def get_label(self):
+        if self.label_is_static:
+            return self.label
+        else:
+            return self.label.format(**self.label_arguments)
+        
+    def run_action(self):
+        if isinstance(self.action, tuple):
+            function, *args = self.action
+        else:
+            function = self.action
+            args = []
+        return function(*args)
+
+
 # Your friendly neighbourhood menu builder. Might be called Bob.
-def makemenu(title: str, labels: list, commands: list, maxtries: int = 3):
-    tries: int = 0
-    if int(len(labels)) != int(len(commands)):
-        print("There are " + str(len(labels)) + " labels and " + str(len(commands)) + " commands passed in this menu.")
-        print("You must pass the same number of commands .")
-    while tries < maxtries:
-        print("")
-        if title != "":
-            print(title)
-        printlistmenu(labels)
-        selection = input("Please select an option [0-" + str(len(labels) - 1) + "]:")
-        if selection.isdigit():
-            selection: int = int(selection)
-        else:
-            tries = invalidoption(tries, maxtries)
-            continue
-        if 0 <= selection <= int(len(labels) - 1):
-            if int(len(commands)) == 1:
-                command_set: set = commands[0]
-            else:
-                command_set: set = commands[selection]
-            if isinstance(command_set, tuple):
-                function, *args = command_set
-            else:
-                function = command_set
-                args = []
-            if function == "returnselection":
-                return selection
-            else:
-                result = function(*args)
-            if result:
-                break
-        else:
-            tries = invalidoption(tries, maxtries)
+class MenuBob(object):
+
+    def __init__(self, titel: str, maxtries: int =3):
+        self.titel = titel
+        self.maxtries = maxtries
+        self.menu_items: List[MenuItemAlice] = []
+        self.description = None
+
+    def addItem(self, item):
+        self.menu_items.append(item)
+
+    def print_menu(self):
+        print()
+        print(self.titel)
+        self.print_description()
+        for item in self.menu_items:
+            label = item.get_label()
+            label_num = self.menu_items.index(item)
+            print(f"{label_num}: {label}")
+    
+    def set_description(self,description):
+        self.description=description
+    
+    def print_description(self):
+        if self.description is not None:
+            print(self.description)
+            
+    def run(self):
+        tries: int = 0
+        while tries < self.maxtries:
+            self.print_menu()
+            selection: int = int(input(f"Please select an option [0-{str(len(self.menu_items) - 1)}]:"))
+            if 0 <= selection <= int(len(self.menu_items) - 1):
+                item=self.menu_items[selection]
+                result = item.run_action()
+                
+                if result:
+                    break
+
+
 
 
 # Bob's mom, always encouraging and ready to help.
 def testmenu(additional_title: str = ""):
-    title: str = f"Test Menu {additional_title}"
-    labels: list = ["Return to previous menu", "option1", "option2"]
-    commands: list = [(returnmenu,), (testmenu, "Option 1"), (print, "Option 2")]
-    makemenu(title, labels, commands)
+    menu=MenuBob(f"Test Menu {additional_title}")
+    
+    item=MenuItemAlice()
+    item.set_static_label("Return to previous menu")
+    item.set_action(returnmenu)
+    menu.addItem(item)
+        
+    item=MenuItemAlice()
+    item.set_static_label("option1")
+    item.set_action(testmenu, "Option 1")
+    menu.addItem(item)
+        
+    item=MenuItemAlice()
+    item.set_static_label("option2")
+    item.set_action(testmenu, "Option 2")
+    menu.addItem(item)
+    
+    menu.run()
 
 
 # The. Menu.
 def mainmenu():
-    title: str = "WGC Main Menu"
-    labels: list = ["Quit WGC", "Configure shared networks", "Configure P2P networks"]
-    commands: list = [quitgracefully, p2mpmenu, p2pmenu]
-    makemenu(title, labels, commands)
+    menu=MenuBob(titel="WGC Main Menu")
+    
+    item=MenuItemAlice()
+    item.set_static_label("Quit WGC")
+    item.set_action(quitgracefully)
+    menu.addItem(item)
+    
+    item=MenuItemAlice()
+    item.set_static_label("Configure shared networks")
+    item.set_action(p2mpmenu)
+    menu.addItem(item)
+    
+    item=MenuItemAlice()
+    item.set_static_label("filebrowser")
+    item.set_action(filebrowser,Path("."))
+    menu.addItem(item)
+    
+    menu.run()
 
 
 # Something @jkoan did to teach me, don't know why I keep it.
 def filebrowser(path: Path):
-    title: str = f"Filebrowser at {path}"
-    labels: list = ["Back"]
-    commands: list = [(returnmenu,)]
+    menu=MenuBob(f"Filebrowser at {path}")
+    item=MenuItemAlice()
+    item.set_static_label("Back")
+    item.set_action(returnmenu)
+    menu.addItem(item)
     for child in path.iterdir():
+        item=MenuItemAlice()
         if child.is_file():
-            labels.append(f"View File Contents of {child}")
-            commands.append((view_file_content, child))
+            item.set_static_label(f"View File Contents of {child}")
+            item.set_action(view_file_content, child)
         elif child.is_dir():
-            labels.append(f"View Directory {child}")
-            commands.append((filebrowser, child))
-    makemenu(title, labels, commands)
+            item.set_static_label(f"View Directory {child}")
+            item.set_action(filebrowser, child)
+        menu.addItem(item)
+    menu.run()
 
 
 # Another thing from @jkoan. Keeping this so filebrowser doesn't get lonely.
@@ -152,15 +233,22 @@ def view_file_content(file):
 def p2mpmenu():
     filefilter: str = "-p2mp.conf"
     interfaces: list = listfile(wireguardpath, filefilter)
-    title: str = "Shared Networks (P2MP Server)"
-    labels: list = ["Return to Main Menu"]
-    commands: list = [returnmenu]
+    menu=MenuBob("Shared Networks (P2MP Server)")
+    item=MenuItemAlice()
+    item.set_static_label("Return to Main Menu")
+    item.set_action(returnmenu)
+    menu.addItem(item)
     for interface in interfaces:
-        labels.append(interface)
-        commands.append((modifyp2mpmenu, interface))
-    labels.append("Set up a new shared network as the server")
-    commands.append(createp2mp)
-    makemenu(title, labels, commands)
+        item=MenuItemAlice()
+        item.set_static_label(interface)
+        item.set_action(modifyp2mpmenu, interface)
+        menu.addItem(item)
+    
+    item=MenuItemAlice()
+    item.set_static_label("Set up a new shared network as the server")
+    item.set_action(createp2mp)
+    menu.addItem(item)
+    menu.run()
 
 
 # P2P network menu. Just as basic.
@@ -193,11 +281,35 @@ def modifyp2mpmenu(interface: str):
     print("IPv4 Address: " + ipv4)
     print("IPv6 Address: " + ipv6)
     print("No. of peers: " + str(peercount))
-    title: str = ""
-    labels: list = ["Return to P2MP selection", "Print Peers", "Edit clients", "Add client", "De-/activate network"]
-    commands: list = [returnmenu, conf.listpeers, (p2mppeerselectmenu, conf), (p2mpaddpeer, conf),
-                      (p2mpupdownmenu, interface)]
-    makemenu(title, labels, commands)
+
+    menu=MenuBob(f"Editing: {intname}")
+
+    item=MenuItemAlice()
+    item.set_static_label("Return to P2MP selection")
+    item.set_action(returnmenu)
+    menu.addItem(item)
+        
+    item=MenuItemAlice()
+    item.set_static_label("Print Peers")
+    item.set_action(conf.listpeers)
+    menu.addItem(item)
+    
+    item=MenuItemAlice()
+    item.set_static_label("Edit clients")
+    item.set_action(p2mppeerselectmenu, conf)
+    menu.addItem(item)
+    
+    item=MenuItemAlice()
+    item.set_static_label("Add client")
+    item.set_action(p2mpaddpeer, conf)
+    menu.addItem(item)
+        
+    item=MenuItemAlice()
+    item.set_static_label("De-/activate network")
+    item.set_action(p2mpupdownmenu, interface)
+    menu.addItem(item)    
+    menu.run()
+
     if askyesno("Do you want to backup and save?"):
         if backup(filepath):
             os.remove(filepath)
@@ -207,28 +319,57 @@ def modifyp2mpmenu(interface: str):
 def p2mppeerselectmenu(conf):
     intname = conf.interface
     alias = conf.alias
-    title: str = ""
-    labels: list = ["Return to previous menu"]
-    commands: list = [returnmenu]
-    print("")
-    print("Editing P2MP Interface: " + intname)
+    menu=MenuBob(f"Editing P2MP Interface: {intname}")
+    
+    item=MenuItemAlice()
+    item.set_static_label("Return to previous menu")
+    item.set_action(returnmenu)
+    menu.addItem(item)
+
+    desc=""
     if alias != "":
-        print("Interface Alias: " + alias)
-    print("")
-    print("Active peer configs:")
+        desc+=f"Interface Alias: {alias}\n"
+    desc=f"Active peer configs:"
+    
+    menu.set_description(desc)
     for peer in conf.peers:
-        labels.append(f"\nAlias: {peer.alias}\nIPv4 : {peer.ipv4}\nIPv6 : {peer.ipv6}\n")
-        commands.append((p2mppeermenu, peer))
-    makemenu(title, labels, commands)
-    return True  # Skip this menu until labels are dynamic
+        item=MenuItemAlice()
+        item.set_dynamic_lable("\nAlias: {peer.alias}\nIPv4 : {peer.ipv4}\nIPv6 : {peer.ipv6}\n",
+                               peer=peer)
+        item.set_action(p2mppeermenu, peer)
+        menu.addItem(item)
+    menu.run()
 
 def p2mppeermenu(peer):
     peer.printpeer()
-    title: str = ""
-    labels: list = ["Return to previous menu", "Edit Alias", "Edit IPv4", "Edit IPV6", "Edit Public Key"]
-    commands: list = [returnmenu, (peeredit, peer, "alias"), (peeredit, peer, "ipv4"),
-                      (peeredit, peer, "ipv6"), (peeredit, peer, "publickey")]
-    makemenu(title, labels, commands)
+    menu=MenuBob("")
+    
+    item=MenuItemAlice()
+    item.set_static_label("Return to previous menu")
+    item.set_action(returnmenu)
+    menu.addItem(item)
+    
+    item=MenuItemAlice()
+    item.set_static_label("Edit Alias")
+    item.set_action(peeredit, peer, "alias")
+    menu.addItem(item)
+    
+    item=MenuItemAlice()
+    item.set_static_label("Edit IPv4")
+    item.set_action(peeredit, peer, "ipv4")
+    menu.addItem(item)
+    
+    item=MenuItemAlice()
+    item.set_static_label("Edit IPv6")
+    item.set_action(peeredit, peer, "ipv6")
+    menu.addItem(item)
+    
+    item=MenuItemAlice()
+    item.set_static_label("Edit Public Key")
+    item.set_action(peeredit, peer, "publickey")
+    menu.addItem(item)
+    
+    menu.run()
     
 
 def peeredit(peer, option: str):
@@ -248,7 +389,8 @@ def p2mpupdownmenu(interface: str):
     print("TBD")
 
 
-# The actual config file parser. Puts everything away neatly into an object and returns that to you.
+# The actual config file parser.
+# Puts everything away neatly into an object and returns that to you.
 def readconfig(filepath):
     file = open(filepath, "r")
     config = file.readlines()
